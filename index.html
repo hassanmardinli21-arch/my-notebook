@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>دفتر الملاحظات المحلي</title>
+    <title>دفتري السحابي</title>
     <style>
         body { font-family: Tahoma, sans-serif; background: #eef2f3; margin: 0; padding: 10px; direction: rtl; }
         .notebook-container { max-width: 900px; margin: auto; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: row; min-height: 550px; overflow: hidden; }
@@ -28,14 +28,14 @@
 
 <div class="notebook-container">
     <div class="sidebar">
-        <h3>الفهرس المحلي</h3>
+        <h3>فهرس الدفتر السحابي</h3>
         <button class="btn-new" onclick="createNewPage()">+ صفحة جديدة</button>
         <ul id="pageList" class="page-list"></ul>
     </div>
 
     <div class="main-content" id="editorArea" style="display: none;">
         <div class="form-group"><input type="text" id="pageTitle" placeholder="عنوان الصفحة..." oninput="autoSave()"></div>
-        <div class="form-group"><textarea id="pageContent" placeholder="اكتب ملاحظاتك هنا... محفوظة محلياً ولن تُحذف إلا إذا ضغطت حذف." oninput="autoSave()"></textarea></div>
+        <div class="form-group"><textarea id="pageContent" placeholder="اكتب ملاحظاتك هنا... محفوظة سحابياً ولن تُحذف إلا إذا ضغطت حذف." oninput="autoSave()"></textarea></div>
         <div class="toolbar">
             <button class="btn-save" onclick="manualSave()">حفظ الآن</button>
             <button class="btn-delete" onclick="deleteCurrentPage()">حذف الصفحة</button>
@@ -48,84 +48,99 @@
     </div>
 </div>
 
-<script>
+<!-- ربط قاعدة البيانات السحابية المجانية Firebase -->
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+    // ⚠️ استبدل هذه الإعدادات بإعدادات مشروعك المجاني من Firebase Console
+    const firebaseConfig = {
+        apiKey: "YOUR_API_KEY",
+        authDomain: "YOUR_AUTH_DOMAIN",
+        projectId: "YOUR_PROJECT_ID",
+        storageBucket: "YOUR_STORAGE_BUCKET",
+        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+        appId: "YOUR_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
     let currentId = null;
     let saveTimeout = null;
 
-    async function loadPages() {
-        const res = await fetch('/api/pages');
-        const pages = await res.json();
+    // جلب الصفحات وعرضها في الفهرس لحظياً
+    onSnapshot(collection(db, "notebook_pages"), (snapshot) => {
         const list = document.getElementById('pageList');
         list.innerHTML = "";
         
-        if(pages.length === 0) {
+        if (snapshot.empty) {
             list.innerHTML = "<li style='text-align:center; color:#bdc3c7;'>لا توجد صفحات</li>";
+            document.getElementById('editorArea').style.display = 'none';
+            document.getElementById('welcomeArea').style.display = 'flex';
             return;
         }
+
+        let pages = [];
+        snapshot.forEach((docSnap) => {
+            pages.push({ id: docSnap.id, ...docSnap.data() });
+        });
 
         pages.forEach(p => {
             const li = document.createElement('li');
             li.className = `page-item ${p.id === currentId ? 'active' : ''}`;
             li.innerText = p.title || 'بدون عنوان';
-            li.onclick = () => selectPage(p.id);
+            li.onclick = () => selectPage(p.id, p.title, p.content);
             list.appendChild(li);
         });
-    }
+    });
 
-    async function selectPage(id) {
+    window.selectPage = function(id, title, content) {
         currentId = id;
-        const res = await fetch(`/api/pages/${id}`);
-        const page = await res.json();
-        
-        document.getElementById('pageTitle').value = page.title;
-        document.getElementById('pageContent').value = page.content;
+        document.getElementById('pageTitle').value = title || "";
+        document.getElementById('pageContent').value = content || "";
         document.getElementById('editorArea').style.display = 'flex';
         document.getElementById('welcomeArea').style.display = 'none';
-        loadPages();
-    }
+    };
 
-    async function createNewPage() {
-        const res = await fetch('/api/pages', { method: 'POST' });
-        const newPage = await res.json();
-        selectPage(newPage.id);
-    }
+    window.createNewPage = async function() {
+        const docRef = await addDoc(collection(db, "notebook_pages"), {
+            title: "صفحة جديدة",
+            content: "",
+            timestamp: new Date()
+        });
+        selectPage(docRef.id, "صفحة جديدة", "");
+    };
 
-    function autoSave() {
+    window.autoSave = function() {
         if (!currentId) return;
         document.getElementById('saveStatus').innerText = "جاري الحفظ...";
         clearTimeout(saveTimeout);
         saveTimeout = setTimeout(saveData, 800);
-    }
+    };
 
-    async function manualSave() {
+    window.manualSave = async function() {
         await saveData();
         document.getElementById('saveStatus').innerText = "تم الحفظ ✓";
         setTimeout(() => document.getElementById('saveStatus').innerText = "", 2000);
-    }
+    };
 
     async function saveData() {
         if (!currentId) return;
-        await fetch(`/api/pages/${currentId}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                title: document.getElementById('pageTitle').value,
-                content: document.getElementById('pageContent').value
-            })
+        await updateDoc(doc(db, "notebook_pages", currentId), {
+            title: document.getElementById('pageTitle').value,
+            content: document.getElementById('pageContent').value,
+            timestamp: new Date()
         });
-        loadPages();
     }
 
-    async function deleteCurrentPage() {
+    window.deleteCurrentPage = async function() {
         if(!confirm("هل تريد حذف هذه الصفحة نهائياً؟")) return;
-        await fetch(`/api/pages/${currentId}`, { method: 'DELETE' });
+        await deleteDoc(doc(db, "notebook_pages", currentId));
         currentId = null;
         document.getElementById('editorArea').style.display = 'none';
         document.getElementById('welcomeArea').style.display = 'flex';
-        loadPages();
-    }
-
-    loadPages();
+    };
 </script>
 </body>
 </html>
