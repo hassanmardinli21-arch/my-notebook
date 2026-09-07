@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دفتر الملاحظات المحلي</title>
+    <style>
+        body { font-family: Tahoma, sans-serif; background: #eef2f3; margin: 0; padding: 10px; direction: rtl; }
+        .notebook-container { max-width: 900px; margin: auto; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: row; min-height: 550px; overflow: hidden; }
+        .sidebar { width: 300px; background: #2c3e50; color: white; padding: 15px; box-sizing: border-box; display: flex; flex-direction: column; }
+        .sidebar h3 { margin-top: 0; border-bottom: 1px solid #4e6d8c; padding-bottom: 10px; font-size: 18px; }
+        .page-list { list-style: none; padding: 0; margin: 0; overflow-y: auto; max-height: 400px; flex-grow: 1; }
+        .page-item { padding: 10px; margin-bottom: 5px; background: #34495e; border-radius: 5px; cursor: pointer; transition: 0.2s; }
+        .page-item:hover, .page-item.active { background: #1abc9c; }
+        .main-content { flex-grow: 1; padding: 20px; display: flex; flex-direction: column; background: #fff; box-sizing: border-box; }
+        .form-group { margin-bottom: 15px; }
+        input[type="text"], textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-family: Tahoma, sans-serif; }
+        textarea { height: 250px; resize: vertical; line-height: 1.6; }
+        .toolbar { display: flex; gap: 10px; }
+        button { padding: 10px 15px; border: none; border-radius: 5px; cursor: pointer; font-size: 14px; font-weight: bold; }
+        .btn-save { background: #27ae60; color: white; }
+        .btn-new { background: #2980b9; color: white; margin-bottom: 10px; width: 100%; }
+        .btn-delete { background: #c0392b; color: white; }
+        .status-msg { font-size: 13px; color: #7f8c8d; align-self: center; }
+    </style>
+</head>
+<body>
+
+<div class="notebook-container">
+    <div class="sidebar">
+        <h3>الفهرس المحلي</h3>
+        <button class="btn-new" onclick="createNewPage()">+ صفحة جديدة</button>
+        <ul id="pageList" class="page-list"></ul>
+    </div>
+
+    <div class="main-content" id="editorArea" style="display: none;">
+        <div class="form-group"><input type="text" id="pageTitle" placeholder="عنوان الصفحة..." oninput="autoSave()"></div>
+        <div class="form-group"><textarea id="pageContent" placeholder="اكتب ملاحظاتك هنا... محفوظة محلياً ولن تُحذف إلا إذا ضغطت حذف." oninput="autoSave()"></textarea></div>
+        <div class="toolbar">
+            <button class="btn-save" onclick="manualSave()">حفظ الآن</button>
+            <button class="btn-delete" onclick="deleteCurrentPage()">حذف الصفحة</button>
+            <span id="saveStatus" class="status-msg"></span>
+        </div>
+    </div>
+    
+    <div id="welcomeArea" style="flex-grow: 1; display: flex; align-items: center; justify-content: center; color: #95a5a6;">
+        <p>اختر صفحة من الفهرس للبدء.</p>
+    </div>
+</div>
+
+<script>
+    let currentId = null;
+    let saveTimeout = null;
+
+    async function loadPages() {
+        const res = await fetch('/api/pages');
+        const pages = await res.json();
+        const list = document.getElementById('pageList');
+        list.innerHTML = "";
+        
+        if(pages.length === 0) {
+            list.innerHTML = "<li style='text-align:center; color:#bdc3c7;'>لا توجد صفحات</li>";
+            return;
+        }
+
+        pages.forEach(p => {
+            const li = document.createElement('li');
+            li.className = `page-item ${p.id === currentId ? 'active' : ''}`;
+            li.innerText = p.title || 'بدون عنوان';
+            li.onclick = () => selectPage(p.id);
+            list.appendChild(li);
+        });
+    }
+
+    async function selectPage(id) {
+        currentId = id;
+        const res = await fetch(`/api/pages/${id}`);
+        const page = await res.json();
+        
+        document.getElementById('pageTitle').value = page.title;
+        document.getElementById('pageContent').value = page.content;
+        document.getElementById('editorArea').style.display = 'flex';
+        document.getElementById('welcomeArea').style.display = 'none';
+        loadPages();
+    }
+
+    async function createNewPage() {
+        const res = await fetch('/api/pages', { method: 'POST' });
+        const newPage = await res.json();
+        selectPage(newPage.id);
+    }
+
+    function autoSave() {
+        if (!currentId) return;
+        document.getElementById('saveStatus').innerText = "جاري الحفظ...";
+        clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(saveData, 800);
+    }
+
+    async function manualSave() {
+        await saveData();
+        document.getElementById('saveStatus').innerText = "تم الحفظ ✓";
+        setTimeout(() => document.getElementById('saveStatus').innerText = "", 2000);
+    }
+
+    async function saveData() {
+        if (!currentId) return;
+        await fetch(`/api/pages/${currentId}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: document.getElementById('pageTitle').value,
+                content: document.getElementById('pageContent').value
+            })
+        });
+        loadPages();
+    }
+
+    async function deleteCurrentPage() {
+        if(!confirm("هل تريد حذف هذه الصفحة نهائياً؟")) return;
+        await fetch(`/api/pages/${currentId}`, { method: 'DELETE' });
+        currentId = null;
+        document.getElementById('editorArea').style.display = 'none';
+        document.getElementById('welcomeArea').style.display = 'flex';
+        loadPages();
+    }
+
+    loadPages();
+</script>
+</body>
+</html>
