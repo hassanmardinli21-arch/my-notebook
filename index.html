@@ -3,23 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>دفتر الملاحظات السحابي - HassanMedication</title>
+    <title>دفتر الملاحظات السحابي - assanMedication</title>
     <style>
         body { font-family: Tahoma, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; direction: rtl; }
         .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
         h2, h3 { color: #2c3e50; text-align: center; }
-        textarea { width: 100%; height: 120px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; resize: vertical; margin-bottom: 10px; box-sizing: border-box; }
+        textarea { width: 100%; height: 120px; padding: 10px; border: 1px solid #ccc; border-radius: 4px; resize: vertical; margin-bottom: 10px; box-sizing: border-box; font-family: Tahoma; }
         button { background-color: #3498db; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-size: 16px; width: 100%; }
         button:hover { background-color: #2980b9; }
-        #status { margin-top: 10px; font-weight: bold; text-align: center; }
+        #status { margin-top: 10px; font-weight: bold; text-align: center; min-height: 24px; }
         .notes-list { margin-top: 20px; border-top: 2px solid #eee; padding-top: 15px; }
         .note-card { background: #fdfdfd; border: 1px solid #e1e8ed; padding: 12px; border-radius: 6px; margin-bottom: 10px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
         .note-date { font-size: 12px; color: #7f8c8d; margin-bottom: 5px; }
         .note-text { font-size: 15px; color: #333; white-space: pre-wrap; }
+        .error-msg { color: #e74c3c; background: #fde0dc; padding: 10px; border-radius: 4px; text-align: center; }
     </style>
 </head>
 <body>
-
     <div class="container">
         <h2>دفتر الملاحظات السحابي</h2>
         <textarea id="noteInput" placeholder="اكتب ملاحظاتك أو أدويتك هنا..."></textarea>
@@ -32,7 +32,6 @@
         </div>
     </div>
 
-    <!-- Firebase SDK Scripts -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
@@ -53,11 +52,15 @@
         const notesContainer = document.getElementById('notesContainer');
         const statusEl = document.getElementById('status');
 
-        // جلب وعرض الملاحظات من مجموعة medications
         async function fetchNotes() {
             try {
+                // ✅ مهم: الآن نبحث في مجموعة "medications" وليس "notes"
                 const q = query(collection(db, "medications"), orderBy("timestamp", "desc"));
                 const querySnapshot = await getDocs(q);
+                
+                // 🔍 هذه الرسالة ستظهر في وحدة التحكم (F12) لتأكيد عدد الملاحظات
+                console.log("✅ عدد الملاحظات التي تم جلبها:", querySnapshot.size);
+
                 notesContainer.innerHTML = '';
                 
                 if (querySnapshot.empty) {
@@ -67,49 +70,61 @@
 
                 querySnapshot.forEach((doc) => {
                     const data = doc.data();
-                    const dateObj = data.timestamp ? data.timestamp.toDate() : new Date();
-                    const dateStr = dateObj.toLocaleString('ar-SA');
+                    console.log("📄 البيانات المسترجعة:", data); // لنرى الحقول الموجودة
+                    
+                    // محاولة عرض التاريخ، مع تجنب الخطأ إذا كان الحقل مختلفاً
+                    let dateStr = 'تاريخ غير محدد';
+                    if (data.timestamp) {
+                        try {
+                            const dateObj = data.timestamp.toDate ? data.timestamp.toDate() : new Date(data.timestamp);
+                            dateStr = dateObj.toLocaleString('ar-SA');
+                        } catch (e) { dateStr = 'تاريخ غير محدد'; }
+                    }
+
+                    // محاولة عرض النص، مع تجنب الخطأ إذا كان الحقل مختلفاً
+                    const textContent = data.text || data.name || data.content || JSON.stringify(data);
 
                     const card = document.createElement('div');
                     card.className = 'note-card';
                     card.innerHTML = `
-                        <div class="note-date">${dateStr}</div>
-                        <div class="note-text">${data.text}</div>
+                        <div class="note-date">📅 ${dateStr}</div>
+                        <div class="note-text">${textContent}</div>
                     `;
                     notesContainer.appendChild(card);
                 });
             } catch (e) {
-                notesContainer.innerHTML = '<p style="color:#e74c3c;">خطأ في جلب الملاحظات: ' + e.message + '</p>';
+                notesContainer.innerHTML = `<p class="error-msg">❌ خطأ في جلب الملاحظات: ${e.message}</p>`;
+                console.error("🔥 تفاصيل خطأ الجلب:", e);
             }
         }
 
-        // حفظ ملاحظة جديدة في مجموعة medications
         document.getElementById('saveBtn').addEventListener('click', async () => {
             const noteText = document.getElementById('noteInput').value;
 
             if (!noteText.trim()) {
                 statusEl.style.color = '#e74c3c';
-                statusEl.innerText = 'الرجاء كتابة شيء قبل الحفظ!';
+                statusEl.innerText = '⚠️ الرجاء كتابة شيء قبل الحفظ!';
                 return;
             }
 
             try {
                 statusEl.style.color = '#3498db';
-                statusEl.innerText = 'جاري الحفظ...';
+                statusEl.innerText = '⏳ جاري الحفظ...';
 
+                // ✅ هنا أيضاً نستخدم "medications"
                 await addDoc(collection(db, "medications"), {
                     text: noteText,
                     timestamp: new Date()
                 });
 
                 statusEl.style.color = '#27ae60';
-                statusEl.innerText = 'تم الحفظ بنجاح!';
-                document.getElementById('noteInput5') || (document.getElementById('noteInput').value = '');
-                
-                fetchNotes();
+                statusEl.innerText = '✅ تم الحفظ بنجاح!';
+                document.getElementById('noteInput').value = '';
+                fetchNotes(); // تحديث الفهرس
             } catch (e) {
                 statusEl.style.color = '#e74c3c';
-                statusEl.innerText = 'حدث خطأ أثناء الحفظ: ' + e.message;
+                statusEl.innerText = '❌ حدث خطأ أثناء الحفظ: ' + e.message;
+                console.error("🔥 تفاصيل خطأ الحفظ:", e);
             }
         });
 
