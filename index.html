@@ -12,6 +12,8 @@
             --primary-hover: #4338ca;
             --danger-color: #ef4444;
             --danger-hover: #dc2626;
+            --success-color: #22c55e;
+            --success-hover: #16a34a;
             --card-shadow: 0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12);
             --card-shadow-hover: 0px 5px 5px -3px rgba(0,0,0,0.2), 0px 8px 10px 1px rgba(0,0,0,0.14), 0px 3px 14px 2px rgba(0,0,0,0.12);
             --border-radius: 16px;
@@ -89,7 +91,7 @@
             color: #94a3b8;
             font-weight: 400;
         }
-        button {
+        #saveBtn {
             background: linear-gradient(145deg, var(--primary-color), #6366f1);
             color: white;
             border: none;
@@ -103,14 +105,20 @@
             box-shadow: 0 4px 6px -1px rgba(79,70,229,0.3);
             letter-spacing: 0.3px;
         }
-        button:hover {
+        #saveBtn:hover {
             background: linear-gradient(145deg, var(--primary-hover), #4f46e5);
             transform: translateY(-2px);
             box-shadow: 0 8px 15px -3px rgba(79,70,229,0.4);
         }
-        button:active {
+        #saveBtn:active {
             transform: translateY(0px);
             box-shadow: 0 2px 4px rgba(79,70,229,0.3);
+        }
+        #saveBtn.update-mode {
+            background: linear-gradient(145deg, var(--success-color), #4ade80);
+        }
+        #saveBtn.update-mode:hover {
+            background: linear-gradient(145deg, var(--success-hover), #22c55e);
         }
         #status {
             margin-top: 14px;
@@ -143,7 +151,7 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 15px;
+            gap: 10px;
         }
         .note-card:hover {
             background: #ffffff;
@@ -177,30 +185,41 @@
             font-weight: 500;
         }
         
-        /* ---------- زر الحذف ---------- */
-        .delete-btn {
+        /* ---------- أزرار التعديل والحذف ---------- */
+        .action-btn {
             background: none;
             border: none;
-            font-size: 24px;
+            font-size: 22px;
             cursor: pointer;
-            padding: 8px 12px;
+            padding: 6px 10px;
             border-radius: 10px;
             transition: all var(--transition-speed) ease;
-            color: #94a3b8;
             background: transparent;
             box-shadow: none;
             width: auto;
             flex-shrink: 0;
             line-height: 1;
         }
-        .delete-btn:hover {
-            background: #fef2f2;
-            color: var(--danger-color);
+        .action-btn:hover {
             transform: scale(1.15);
             box-shadow: none;
         }
-        .delete-btn:active {
+        .action-btn:active {
             transform: scale(0.9);
+        }
+        .edit-btn {
+            color: #3b82f6;
+        }
+        .edit-btn:hover {
+            background: #eff6ff;
+            color: #2563eb;
+        }
+        .delete-btn {
+            color: #94a3b8;
+        }
+        .delete-btn:hover {
+            background: #fef2f2;
+            color: var(--danger-color);
         }
 
         .empty-message {
@@ -220,14 +239,19 @@
             text-align: center;
             border: 1px solid #fecaca;
         }
+        .btn-group {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
         @media (max-width: 600px) {
             body { padding: 12px 8px; }
             .container { padding: 20px 16px; }
             h2 { font-size: 22px; }
             textarea { height: 110px; font-size: 15px; }
-            button { font-size: 16px; padding: 12px; }
+            #saveBtn { font-size: 16px; padding: 12px; }
             .note-card { padding: 14px 16px; flex-wrap: wrap; }
-            .delete-btn { font-size: 28px; padding: 4px 8px; }
+            .action-btn { font-size: 26px; padding: 4px 8px; }
         }
     </style>
 </head>
@@ -243,9 +267,8 @@
         </div>
     </div>
     <script type="module">
-        // استيراد الدوال الإضافية المطلوبة
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, deleteDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBrXDy3FuN6YJlIYTWCD_TsfMvkmiWZiLo",
@@ -262,8 +285,13 @@
 
         const notesContainer = document.getElementById('notesContainer');
         const statusEl = document.getElementById('status');
+        const noteInput = document.getElementById('noteInput');
+        const saveBtn = document.getElementById('saveBtn');
 
-        // دالة لجلب وعرض الملاحظات
+        // متغير لتخزين معرف المستند الجاري تعديله
+        let editingDocId = null;
+
+        // دالة جلب وعرض الملاحظات
         async function fetchNotes() {
             try {
                 const q = query(collection(db, "medications"), orderBy("timestamp", "desc"));
@@ -277,7 +305,7 @@
 
                 querySnapshot.forEach((docSnap) => {
                     const data = docSnap.data();
-                    const docId = docSnap.id; // معرف المستند الفريد
+                    const docId = docSnap.id;
 
                     let dateStr = 'تاريخ غير محدد';
                     if (data.timestamp) {
@@ -292,7 +320,7 @@
                     const card = document.createElement('div');
                     card.className = 'note-card';
                     
-                    // محتوى البطاقة (النص والتاريخ)
+                    // محتوى البطاقة
                     const contentDiv = document.createElement('div');
                     contentDiv.className = 'note-content';
                     contentDiv.innerHTML = `
@@ -300,33 +328,54 @@
                         <div class="note-text">${textContent}</div>
                     `;
 
+                    // مجموعة الأزرار
+                    const btnGroup = document.createElement('div');
+                    btnGroup.className = 'btn-group';
+
+                    // زر التعديل
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'action-btn edit-btn';
+                    editBtn.innerHTML = '✏️';
+                    editBtn.title = 'تعديل هذه الملاحظة';
+                    editBtn.dataset.id = docId;
+                    editBtn.dataset.text = textContent;
+
+                    editBtn.addEventListener('click', () => {
+                        // وضع النص في حقل الإدخال
+                        noteInput.value = textContent;
+                        // تغيير النص واللون للزر
+                        saveBtn.textContent = '✅ تحديث الملاحظة';
+                        saveBtn.classList.add('update-mode');
+                        // تخزين المعرف
+                        editingDocId = docId;
+                        // تمرير الصفحة إلى أعلى (إلى حقل الإدخال)
+                        noteInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        noteInput.focus();
+                        // رسالة تأكيد
+                        statusEl.style.color = '#2563eb';
+                        statusEl.style.background = '#eff6ff';
+                        statusEl.innerText = '✏️ جارٍ التعديل... عدّل النص ثم اضغط "تحديث الملاحظة"';
+                    });
+
                     // زر الحذف
                     const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.className = 'action-btn delete-btn';
                     deleteBtn.innerHTML = '🗑️';
                     deleteBtn.title = 'حذف هذه الملاحظة';
-                    deleteBtn.dataset.id = docId; // نخزن المعرف في الزر
+                    deleteBtn.dataset.id = docId;
 
-                    // إضافة حدث الحذف للزر
                     deleteBtn.addEventListener('click', async (e) => {
-                        e.stopPropagation(); // لمنع أي تأثيرات جانبية
-                        if (!confirm('هل أنت متأكد من حذف هذه الملاحظة نهائياً؟')) {
-                            return;
-                        }
+                        e.stopPropagation();
+                        if (!confirm('هل أنت متأكد من حذف هذه الملاحظة نهائياً؟')) return;
 
                         try {
                             statusEl.style.color = '#2563eb';
                             statusEl.style.background = '#eff6ff';
                             statusEl.innerText = '⏳ جاري الحذف...';
-
-                            // حذف المستند من Firebase
                             await deleteDoc(doc(db, "medications", docId));
-
                             statusEl.style.color = '#16a34a';
                             statusEl.style.background = '#f0fdf4';
                             statusEl.innerText = '✅ تم الحذف بنجاح!';
-                            
-                            // إعادة تحميل الفهرس بدون الحاجة لإعادة تحميل الصفحة
                             fetchNotes();
                         } catch (error) {
                             statusEl.style.color = '#dc2626';
@@ -336,8 +385,10 @@
                         }
                     });
 
+                    btnGroup.appendChild(editBtn);
+                    btnGroup.appendChild(deleteBtn);
                     card.appendChild(contentDiv);
-                    card.appendChild(deleteBtn);
+                    card.appendChild(btnGroup);
                     notesContainer.appendChild(card);
                 });
             } catch (e) {
@@ -346,35 +397,63 @@
             }
         }
 
-        // دالة حفظ ملاحظة جديدة
-        document.getElementById('saveBtn').addEventListener('click', async () => {
-            const noteText = document.getElementById('noteInput').value;
-            if (!noteText.trim()) {
+        // دالة حفظ جديدة أو تحديث
+        saveBtn.addEventListener('click', async () => {
+            const noteText = noteInput.value.trim();
+            if (!noteText) {
                 statusEl.style.color = '#dc2626';
                 statusEl.style.background = '#fef2f2';
                 statusEl.innerText = '⚠️ الرجاء كتابة شيء قبل الحفظ!';
                 return;
             }
+
             try {
-                statusEl.style.color = '#2563eb';
-                statusEl.style.background = '#eff6ff';
-                statusEl.innerText = '⏳ جاري الحفظ...';
-                await addDoc(collection(db, "medications"), {
-                    text: noteText,
-                    timestamp: new Date()
-                });
-                statusEl.style.color = '#16a34a';
-                statusEl.style.background = '#f0fdf4';
-                statusEl.innerText = '✅ تم الحفظ بنجاح!';
-                document.getElementById('noteInput').value = '';
-                fetchNotes();
+                // إذا كنا في وضع التعديل (يوجد docId)
+                if (editingDocId) {
+                    statusEl.style.color = '#2563eb';
+                    statusEl.style.background = '#eff6ff';
+                    statusEl.innerText = '⏳ جاري تحديث الملاحظة...';
+
+                    // تحديث المستند الموجود
+                    await updateDoc(doc(db, "medications", editingDocId), {
+                        text: noteText,
+                        timestamp: new Date() // نحدث التاريخ أيضاً
+                    });
+
+                    statusEl.style.color = '#16a34a';
+                    statusEl.style.background = '#f0fdf4';
+                    statusEl.innerText = '✅ تم التحديث بنجاح!';
+
+                    // إعادة الزر إلى وضعه الطبيعي
+                    saveBtn.textContent = '💾 حفظ على السحابة';
+                    saveBtn.classList.remove('update-mode');
+                    editingDocId = null;
+                    noteInput.value = '';
+                } else {
+                    // حفظ جديد
+                    statusEl.style.color = '#2563eb';
+                    statusEl.style.background = '#eff6ff';
+                    statusEl.innerText = '⏳ جاري الحفظ...';
+                    await addDoc(collection(db, "medications"), {
+                        text: noteText,
+                        timestamp: new Date()
+                    });
+                    statusEl.style.color = '#16a34a';
+                    statusEl.style.background = '#f0fdf4';
+                    statusEl.innerText = '✅ تم الحفظ بنجاح!';
+                    noteInput.value = '';
+                }
+                fetchNotes(); // تحديث الفهرس
             } catch (e) {
                 statusEl.style.color = '#dc2626';
                 statusEl.style.background = '#fef2f2';
-                statusEl.innerText = '❌ حدث خطأ أثناء الحفظ: ' + e.message;
-                console.error("خطأ الحفظ:", e);
+                statusEl.innerText = '❌ حدث خطأ: ' + e.message;
+                console.error("خطأ:", e);
             }
         });
+
+        // إلغاء وضع التعديل إذا نقر المستخدم على حقل الإدخال وهو فارغ (اختياري)
+        // يمكن إضافة زر إلغاء لكنه ليس ضرورياً
 
         fetchNotes();
     </script>
