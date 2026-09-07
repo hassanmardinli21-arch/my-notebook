@@ -10,6 +10,8 @@
             --mat-app-text-color: #1f1f1f;
             --primary-color: #4f46e5;
             --primary-hover: #4338ca;
+            --danger-color: #ef4444;
+            --danger-hover: #dc2626;
             --card-shadow: 0px 3px 1px -2px rgba(0,0,0,0.2), 0px 2px 2px 0px rgba(0,0,0,0.14), 0px 1px 5px 0px rgba(0,0,0,0.12);
             --card-shadow-hover: 0px 5px 5px -3px rgba(0,0,0,0.2), 0px 8px 10px 1px rgba(0,0,0,0.14), 0px 3px 14px 2px rgba(0,0,0,0.12);
             --border-radius: 16px;
@@ -138,12 +140,20 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.04);
             transition: all var(--transition-speed) ease;
             border-right: 5px solid var(--primary-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 15px;
         }
         .note-card:hover {
             background: #ffffff;
             border-color: #d1d9e6;
             box-shadow: var(--card-shadow);
             transform: translateX(-4px);
+        }
+        .note-content {
+            flex: 1;
+            overflow: hidden;
         }
         .note-date {
             font-size: 13px;
@@ -166,6 +176,33 @@
             line-height: 1.7;
             font-weight: 500;
         }
+        
+        /* ---------- زر الحذف ---------- */
+        .delete-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 8px 12px;
+            border-radius: 10px;
+            transition: all var(--transition-speed) ease;
+            color: #94a3b8;
+            background: transparent;
+            box-shadow: none;
+            width: auto;
+            flex-shrink: 0;
+            line-height: 1;
+        }
+        .delete-btn:hover {
+            background: #fef2f2;
+            color: var(--danger-color);
+            transform: scale(1.15);
+            box-shadow: none;
+        }
+        .delete-btn:active {
+            transform: scale(0.9);
+        }
+
         .empty-message {
             text-align: center;
             color: #94a3b8;
@@ -189,7 +226,8 @@
             h2 { font-size: 22px; }
             textarea { height: 110px; font-size: 15px; }
             button { font-size: 16px; padding: 12px; }
-            .note-card { padding: 14px 16px; }
+            .note-card { padding: 14px 16px; flex-wrap: wrap; }
+            .delete-btn { font-size: 28px; padding: 4px 8px; }
         }
     </style>
 </head>
@@ -205,8 +243,9 @@
         </div>
     </div>
     <script type="module">
+        // استيراد الدوال الإضافية المطلوبة
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getFirestore, collection, addDoc, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+        import { getFirestore, collection, addDoc, getDocs, query, orderBy, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBrXDy3FuN6YJlIYTWCD_TsfMvkmiWZiLo",
@@ -224,17 +263,22 @@
         const notesContainer = document.getElementById('notesContainer');
         const statusEl = document.getElementById('status');
 
+        // دالة لجلب وعرض الملاحظات
         async function fetchNotes() {
             try {
                 const q = query(collection(db, "medications"), orderBy("timestamp", "desc"));
                 const querySnapshot = await getDocs(q);
                 notesContainer.innerHTML = '';
+                
                 if (querySnapshot.empty) {
                     notesContainer.innerHTML = '<p class="empty-message">📭 لا توجد ملاحظات محفوظة حتى الآن.</p>';
                     return;
                 }
-                querySnapshot.forEach((doc) => {
-                    const data = doc.data();
+
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const docId = docSnap.id; // معرف المستند الفريد
+
                     let dateStr = 'تاريخ غير محدد';
                     if (data.timestamp) {
                         try {
@@ -242,13 +286,58 @@
                             dateStr = dateObj.toLocaleString('ar-SA', { hour12: true });
                         } catch (e) { dateStr = 'تاريخ غير محدد'; }
                     }
+
                     const textContent = data.text || data.name || data.content || JSON.stringify(data);
+
                     const card = document.createElement('div');
                     card.className = 'note-card';
-                    card.innerHTML = `
+                    
+                    // محتوى البطاقة (النص والتاريخ)
+                    const contentDiv = document.createElement('div');
+                    contentDiv.className = 'note-content';
+                    contentDiv.innerHTML = `
                         <div class="note-date">${dateStr}</div>
                         <div class="note-text">${textContent}</div>
                     `;
+
+                    // زر الحذف
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-btn';
+                    deleteBtn.innerHTML = '🗑️';
+                    deleteBtn.title = 'حذف هذه الملاحظة';
+                    deleteBtn.dataset.id = docId; // نخزن المعرف في الزر
+
+                    // إضافة حدث الحذف للزر
+                    deleteBtn.addEventListener('click', async (e) => {
+                        e.stopPropagation(); // لمنع أي تأثيرات جانبية
+                        if (!confirm('هل أنت متأكد من حذف هذه الملاحظة نهائياً؟')) {
+                            return;
+                        }
+
+                        try {
+                            statusEl.style.color = '#2563eb';
+                            statusEl.style.background = '#eff6ff';
+                            statusEl.innerText = '⏳ جاري الحذف...';
+
+                            // حذف المستند من Firebase
+                            await deleteDoc(doc(db, "medications", docId));
+
+                            statusEl.style.color = '#16a34a';
+                            statusEl.style.background = '#f0fdf4';
+                            statusEl.innerText = '✅ تم الحذف بنجاح!';
+                            
+                            // إعادة تحميل الفهرس بدون الحاجة لإعادة تحميل الصفحة
+                            fetchNotes();
+                        } catch (error) {
+                            statusEl.style.color = '#dc2626';
+                            statusEl.style.background = '#fef2f2';
+                            statusEl.innerText = '❌ خطأ في الحذف: ' + error.message;
+                            console.error("خطأ الحذف:", error);
+                        }
+                    });
+
+                    card.appendChild(contentDiv);
+                    card.appendChild(deleteBtn);
                     notesContainer.appendChild(card);
                 });
             } catch (e) {
@@ -257,6 +346,7 @@
             }
         }
 
+        // دالة حفظ ملاحظة جديدة
         document.getElementById('saveBtn').addEventListener('click', async () => {
             const noteText = document.getElementById('noteInput').value;
             if (!noteText.trim()) {
