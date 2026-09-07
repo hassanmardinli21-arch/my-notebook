@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>دفتر الملاحظات السحابي -assanMedication</title>
+    <title>دفتر الملاحظات السحابي - HassanMedication</title>
     <style>
         body { font-family: Tahoma, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; direction: rtl; }
         .container { max-width: 800px; margin: auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -53,10 +53,10 @@
         const notesContainer = document.getElementById('notesContainer');
         const statusEl = document.getElementById('status');
 
-        // دالة لجلب وعرض الملاحظات
+        // جلب وعرض الملاحظات من مجموعة medications
         async function fetchNotes() {
             try {
-                const q = query(collection(db, "notes"), orderBy("timestamp", "desc"));
+                const q = query(collection(db, "medications"), orderBy("timestamp", "desc"));
                 const querySnapshot = await getDocs(q);
                 notesContainer.innerHTML = '';
                 
@@ -83,7 +83,7 @@
             }
         }
 
-        // حفظ ملاحظة جديدة
+        // حفظ ملاحظة جديدة في مجموعة medications
         document.getElementById('saveBtn').addEventListener('click', async () => {
             const noteText = document.getElementById('noteInput').value;
 
@@ -97,16 +97,15 @@
                 statusEl.style.color = '#3498db';
                 statusEl.innerText = 'جاري الحفظ...';
 
-                await addDoc(collection(db, "notes"), {
+                await addDoc(collection(db, "medications"), {
                     text: noteText,
                     timestamp: new Date()
                 });
 
                 statusEl.style.color = '#27ae60';
                 statusEl.innerText = 'تم الحفظ بنجاح!';
-                document.getElementById('noteInput').value = '';
+                document.getElementById('noteInput5') || (document.getElementById('noteInput').value = '');
                 
-                // إعادة تحميل الفهرس فوراً
                 fetchNotes();
             } catch (e) {
                 statusEl.style.color = '#e74c3c';
@@ -114,7 +113,6 @@
             }
         });
 
-        // جلب الملاحظات عند فتح الصفحة
         fetchNotes();
     </script>
 </body>
