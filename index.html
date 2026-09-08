@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>دفتر الملاحظات السحابي - AssanMedication</title>
+    <title>دفتر الملاحظات السحابي</title>
     <style>
         :root {
             --mat-app-background-color: #f8f9fa;
@@ -51,15 +51,6 @@
             letter-spacing: -0.5px;
         }
         h2::after { content: " ☁️"; font-size: 26px; }
-        h3 {
-            font-size: 20px;
-            font-weight: 600;
-            color: #334155;
-            text-align: center;
-            margin: 25px 0 15px 0;
-            border-bottom: 2px solid #e9edf2;
-            padding-bottom: 12px;
-        }
         textarea {
             width: 100%;
             height: 140px;
@@ -85,7 +76,7 @@
         textarea::placeholder { color: #94a3b8; font-weight: 400; }
         
         #saveBtn {
-            background: linear-gradient(145deg, var(--primary-color), #6366f1);
+            background: linear-gradient(145deg, #4f46e5, #6366f1);
             color: white;
             border: none;
             padding: 14px 20px;
@@ -94,21 +85,27 @@
             font-size: 18px;
             font-weight: 600;
             width: 100%;
-            transition: transform var(--transition-speed) ease, box-shadow var(--transition-speed) ease, background var(--transition-speed) ease;
+            transition: all var(--transition-speed) ease;
             box-shadow: 0 4px 6px -1px rgba(79,70,229,0.3);
             letter-spacing: 0.3px;
         }
         #saveBtn:hover {
-            background: linear-gradient(145deg, var(--primary-hover), #4f46e5);
+            background: linear-gradient(145deg, #4338ca, #4f46e5);
             transform: translateY(-2px);
             box-shadow: 0 8px 15px -3px rgba(79,70,229,0.4);
         }
         #saveBtn:active { transform: translateY(0px); box-shadow: 0 2px 4px rgba(79,70,229,0.3); }
-        #saveBtn.update-mode {
-            background: linear-gradient(145deg, var(--success-color), #4ade80);
+        
+        /* ---- ألوان زر الحفظ قبل وبعد ---- */
+        #saveBtn.text-red {
+            color: #dc2626 !important;
+            background: #fee2e2 !important;
+            border: 2px solid #dc2626 !important;
         }
-        #saveBtn.update-mode:hover {
-            background: linear-gradient(145deg, var(--success-hover), #22c55e);
+        #saveBtn.text-green {
+            color: #16a34a !important;
+            background: #dcfce7 !important;
+            border: 2px solid #16a34a !important;
         }
         
         #status {
@@ -121,11 +118,40 @@
             border-radius: 8px;
             transition: background 0.2s ease;
         }
+        
+        /* ---- زر إظهار/إخفاء الفهرس ---- */
+        .toggle-index-btn {
+            background: #1e293b;
+            color: white;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all var(--transition-speed) ease;
+            width: 100%;
+            margin: 20px 0 10px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .toggle-index-btn:hover {
+            background: #334155;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .toggle-index-btn:active { transform: translateY(0px); }
+        
+        /* ---- قائمة الملاحظات (مخفية افتراضياً) ---- */
         .notes-list {
-            margin-top: 25px;
+            margin-top: 10px;
             border-top: 2px solid #f1f5f9;
             padding-top: 10px;
+            display: none; /* مخفية افتراضياً */
         }
+        .notes-list.visible {
+            display: block;
+        }
+        
         #notesContainer {
             display: flex;
             flex-direction: column;
@@ -172,8 +198,6 @@
             line-height: 1.7;
             font-weight: 500;
         }
-        
-        /* ---------- أزرار التعديل والحذف ---------- */
         .btn-group {
             display: flex;
             gap: 8px;
@@ -235,15 +259,23 @@
             text-align: center;
             border: 1px solid #fecaca;
         }
+        /* إخفاء عنوان الفهرس */
+        .notes-list h3 {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>دفتر الملاحظات السحابي</h2>
-        <textarea id="noteInput" placeholder="✍️ اكتب ملاحظاتك أو أدويتك هنا..."></textarea>
-        <button id="saveBtn">💾 حفظ على السحابة</button>
+        <textarea id="noteInput" placeholder="✍️ اكتب ملاحظاتك هنا..."></textarea>
+        <button id="saveBtn" class="text-red">💾 حفظ على السحابة</button>
         <p id="status"></p>
-        <div class="notes-list">
+        
+        <!-- زر إظهار/إخفاء الفهرس -->
+        <button class="toggle-index-btn" id="toggleIndexBtn">📂 إظهار الفهرس</button>
+        
+        <div class="notes-list" id="notesList">
             <h3>📂 فهرس الملاحظات المحفوظة</h3>
             <div id="notesContainer">⏳ جاري تحميل الملاحظات...</div>
         </div>
@@ -269,12 +301,30 @@
         const statusEl = document.getElementById('status');
         const noteInput = document.getElementById('noteInput');
         const saveBtn = document.getElementById('saveBtn');
+        const notesList = document.getElementById('notesList');
+        const toggleBtn = document.getElementById('toggleIndexBtn');
 
         let editingDocId = null;
 
+        // ========== التحكم في إظهار/إخفاء الفهرس ==========
+        let isVisible = false;
+        toggleBtn.addEventListener('click', () => {
+            isVisible = !isVisible;
+            notesList.classList.toggle('visible', isVisible);
+            toggleBtn.textContent = isVisible ? '📂 إخفاء الفهرس' : '📂 إظهار الفهرس';
+        });
+
+        // ========== تغيير لون الزر ==========
+        function setButtonColor(color) {
+            saveBtn.classList.remove('text-red', 'text-green');
+            if (color === 'red') saveBtn.classList.add('text-red');
+            else if (color === 'green') saveBtn.classList.add('text-green');
+        }
+
+        // ========== جلب الملاحظات ==========
         async function fetchNotes() {
             try {
-                const q = query(collection(db, "medications"), orderBy("timestamp", "desc"));
+                const q = query(collection(db, "notes"), orderBy("timestamp", "desc"));
                 const querySnapshot = await getDocs(q);
                 notesContainer.innerHTML = '';
                 
@@ -295,7 +345,7 @@
                         } catch (e) { dateStr = 'تاريخ غير محدد'; }
                     }
 
-                    const textContent = data.text || data.name || data.content || JSON.stringify(data);
+                    const textContent = data.text || data.name || 'ملاحظة فارغة';
 
                     const card = document.createElement('div');
                     card.className = 'note-card';
@@ -310,33 +360,26 @@
                     const btnGroup = document.createElement('div');
                     btnGroup.className = 'btn-group';
 
-                    // زر التعديل
                     const editBtn = document.createElement('button');
                     editBtn.className = 'action-btn edit-btn';
                     editBtn.innerHTML = '✏️ <span class="action-label">تعديل</span>';
-                    editBtn.title = 'تعديل هذه الملاحظة';
                     editBtn.dataset.id = docId;
                     editBtn.dataset.text = textContent;
-
                     editBtn.addEventListener('click', () => {
                         noteInput.value = textContent;
                         saveBtn.textContent = '✅ تحديث الملاحظة';
-                        saveBtn.classList.add('update-mode');
+                        setButtonColor('green');
                         editingDocId = docId;
-                        noteInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         noteInput.focus();
                         statusEl.style.color = '#2563eb';
                         statusEl.style.background = '#eff6ff';
                         statusEl.innerText = '✏️ جارٍ التعديل... عدّل النص ثم اضغط "تحديث الملاحظة"';
                     });
 
-                    // زر الحذف
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'action-btn delete-btn';
                     deleteBtn.innerHTML = '🗑️ <span class="action-label">حذف</span>';
-                    deleteBtn.title = 'حذف هذه الملاحظة';
                     deleteBtn.dataset.id = docId;
-
                     deleteBtn.addEventListener('click', async (e) => {
                         e.stopPropagation();
                         if (!confirm('هل أنت متأكد من حذف هذه الملاحظة نهائياً؟')) return;
@@ -345,7 +388,7 @@
                             statusEl.style.color = '#2563eb';
                             statusEl.style.background = '#eff6ff';
                             statusEl.innerText = '⏳ جاري الحذف...';
-                            await deleteDoc(doc(db, "medications", docId));
+                            await deleteDoc(doc(db, "notes", docId));
                             statusEl.style.color = '#16a34a';
                             statusEl.style.background = '#f0fdf4';
                             statusEl.innerText = '✅ تم الحذف بنجاح!';
@@ -370,12 +413,14 @@
             }
         }
 
+        // ========== حفظ أو تحديث ==========
         saveBtn.addEventListener('click', async () => {
             const noteText = noteInput.value.trim();
             if (!noteText) {
                 statusEl.style.color = '#dc2626';
                 statusEl.style.background = '#fef2f2';
                 statusEl.innerText = '⚠️ الرجاء كتابة شيء قبل الحفظ!';
+                setButtonColor('red');
                 return;
             }
 
@@ -384,7 +429,7 @@
                     statusEl.style.color = '#2563eb';
                     statusEl.style.background = '#eff6ff';
                     statusEl.innerText = '⏳ جاري تحديث الملاحظة...';
-                    await updateDoc(doc(db, "medications", editingDocId), {
+                    await updateDoc(doc(db, "notes", editingDocId), {
                         text: noteText,
                         timestamp: new Date()
                     });
@@ -392,31 +437,48 @@
                     statusEl.style.background = '#f0fdf4';
                     statusEl.innerText = '✅ تم التحديث بنجاح!';
                     saveBtn.textContent = '💾 حفظ على السحابة';
-                    saveBtn.classList.remove('update-mode');
+                    setButtonColor('green');
                     editingDocId = null;
                     noteInput.value = '';
                 } else {
                     statusEl.style.color = '#2563eb';
                     statusEl.style.background = '#eff6ff';
                     statusEl.innerText = '⏳ جاري الحفظ...';
-                    await addDoc(collection(db, "medications"), {
+                    await addDoc(collection(db, "notes"), {
                         text: noteText,
                         timestamp: new Date()
                     });
                     statusEl.style.color = '#16a34a';
                     statusEl.style.background = '#f0fdf4';
                     statusEl.innerText = '✅ تم الحفظ بنجاح!';
+                    setButtonColor('green');
                     noteInput.value = '';
                 }
                 fetchNotes();
+                // إعادة الزر إلى الأحمر بعد 3 ثوانٍ
+                setTimeout(() => {
+                    if (!editingDocId) {
+                        setButtonColor('red');
+                        saveBtn.textContent = '💾 حفظ على السحابة';
+                    }
+                }, 3000);
             } catch (e) {
                 statusEl.style.color = '#dc2626';
                 statusEl.style.background = '#fef2f2';
                 statusEl.innerText = '❌ حدث خطأ: ' + e.message;
+                setButtonColor('red');
                 console.error("خطأ:", e);
             }
         });
 
+        // ========== عند تحرير النص ==========
+        noteInput.addEventListener('input', () => {
+            if (noteInput.value.trim().length > 0) {
+                setButtonColor('red');
+            }
+        });
+
+        // ========== تشغيل ==========
         fetchNotes();
     </script>
 </body>
