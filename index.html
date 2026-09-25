@@ -1,1 +1,1057 @@
 
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>دفتر الملاحظات السحابي</title>
+    <style>
+        /* ========== متغيرات "الكتاب القديم" ========== */
+        :root {
+            /* ألوان الورق العتيق */
+            --paper-bg: #f4e4bc;              /* الورق الرئيسي */
+            --paper-card: #faf0d7;            /* البطاقات (أفتح قليلاً) */
+            --paper-dark: #e8d7a8;            /* ورق داكن للتدرجات */
+            --paper-border: #c9a961;          /* حدود ذهبية */
+
+            /* ألوان الحبر */
+            --ink-dark: #3e2c1c;              /* نص أساسي */
+            --ink-medium: #5c4530;            /* نص ثانوي */
+            --ink-light: #8b6f47;             /* نص باهت */
+
+            /* ألوان الخلفية الخارجية (خشب/جلد) */
+            --bg-outer: #5d4a35;
+            --bg-outer-light: #7a6344;
+
+            /* ألوان التمييز */
+            --primary-color: #8b5a2b;
+            --primary-hover: #6f4620;
+            --success-color: #5d8a3e;
+            --danger-color: #a83232;
+
+            --transition-speed: 0.25s;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        /* ========== الخلفية الخارجية (خشب/جلد) ========== */
+        body {
+            font-family: 'Georgia', 'Times New Roman', 'Amiri', serif;
+            background:
+                radial-gradient(ellipse at center, var(--bg-outer-light) 0%, var(--bg-outer) 100%),
+                repeating-linear-gradient(
+                    90deg,
+                    rgba(0,0,0,0.03) 0px,
+                    rgba(0,0,0,0.03) 2px,
+                    transparent 2px,
+                    transparent 6px
+                );
+            background-attachment: fixed;
+            color: var(--ink-dark);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        /* ========== الحاوية الرئيسية (الورقة العتيقة) ========== */
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background:
+                radial-gradient(circle at 20% 30%, rgba(180, 140, 80, 0.08) 0%, transparent 25%),
+                radial-gradient(circle at 80% 70%, rgba(160, 120, 60, 0.06) 0%, transparent 30%),
+                radial-gradient(circle at 50% 90%, rgba(140, 100, 50, 0.05) 0%, transparent 20%),
+                var(--paper-bg);
+            padding: 30px;
+            border-radius: 8px;
+            border: 2px solid #a8845a;
+            box-shadow:
+                0 20px 50px rgba(0,0,0,0.5),
+                0 8px 15px rgba(0,0,0,0.3),
+                inset 0 0 0 6px var(--paper-bg),
+                inset 0 0 0 7px var(--paper-border),
+                inset 0 0 60px rgba(160, 120, 60, 0.15);
+            position: relative;
+        }
+
+        /* زخرفة الزوايا */
+        .container::before,
+        .container::after {
+            content: "";
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 2px solid var(--paper-border);
+            pointer-events: none;
+        }
+        .container::before {
+            top: 12px;
+            right: 12px;
+            border-left: none;
+            border-bottom: none;
+        }
+        .container::after {
+            bottom: 12px;
+            left: 12px;
+            border-right: none;
+            border-top: none;
+        }
+
+        /* ========== العنوان ========== */
+        h2 {
+            font-family: 'Georgia', 'Amiri', serif;
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--ink-dark);
+            text-align: center;
+            margin-bottom: 20px;
+            letter-spacing: -0.3px;
+            text-shadow:
+                1px 1px 0 rgba(255, 255, 255, 0.5),
+                -1px -1px 0 rgba(0, 0, 0, 0.05);
+            border-bottom: 2px double var(--paper-border);
+            padding-bottom: 15px;
+        }
+        h2::after { content: " ☁️"; font-size: 26px; }
+
+        /* ========== شريط التنبيه بالحدود ========== */
+        .limit-info {
+            background: rgba(255, 235, 180, 0.6);
+            border: 1px solid var(--paper-border);
+            color: var(--ink-medium);
+            padding: 10px 14px;
+            border-radius: 6px;
+            font-size: 13px;
+            text-align: center;
+            margin-bottom: 15px;
+            line-height: 1.6;
+            font-style: italic;
+        }
+        .limit-info strong { color: var(--ink-dark); font-style: normal; }
+
+        /* ========== منطقة الكتابة ========== */
+        textarea {
+            width: 100%;
+            height: 140px;
+            padding: 15px;
+            border: 2px solid var(--paper-border);
+            border-radius: 6px;
+            font-size: 16px;
+            font-family: 'Georgia', 'Amiri', serif;
+            resize: vertical;
+            background: var(--paper-card);
+            color: var(--ink-dark);
+            line-height: 1.6;
+            box-shadow: inset 2px 2px 6px rgba(160, 120, 60, 0.1);
+        }
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background: #fdf6e3;
+            box-shadow:
+                inset 2px 2px 6px rgba(160, 120, 60, 0.15),
+                0 0 0 3px rgba(200, 169, 97, 0.2);
+        }
+        textarea::placeholder {
+            color: var(--ink-light);
+            font-style: italic;
+        }
+
+        /* ========== زر الحفظ ========== */
+        #saveBtn {
+            background: linear-gradient(145deg, #a06b3a, #8b5a2b);
+            color: #fdf6e3;
+            border: 1px solid #6f4620;
+            padding: 14px 20px;
+            border-radius: 6px;
+            font-size: 18px;
+            font-weight: 600;
+            width: 100%;
+            margin-top: 15px;
+            transition: all var(--transition-speed) ease;
+            box-shadow:
+                0 4px 6px -1px rgba(60, 40, 20, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            letter-spacing: 0.3px;
+            cursor: pointer;
+            font-family: 'Georgia', 'Amiri', serif;
+        }
+        #saveBtn:hover {
+            background: linear-gradient(145deg, #8b5a2b, #6f4620);
+            transform: translateY(-2px);
+            box-shadow:
+                0 8px 15px -3px rgba(60, 40, 20, 0.5),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        #saveBtn:active { transform: translateY(0); }
+
+        #saveBtn.update-mode {
+            background: linear-gradient(145deg, #6b9d4a, var(--success-color));
+            border-color: #4a6b32;
+        }
+        #saveBtn.text-red {
+            color: var(--danger-color) !important;
+            background: #f5d5d5 !important;
+            border: 2px solid var(--danger-color) !important;
+            box-shadow: none !important;
+        }
+        #saveBtn.text-green {
+            color: #4a6b32 !important;
+            background: #d9e8cc !important;
+            border: 2px solid var(--success-color) !important;
+            box-shadow: none !important;
+        }
+
+        #status {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 15px;
+            font-weight: 600;
+            padding: 10px;
+            border-radius: 6px;
+            transition: all 0.2s ease;
+            min-height: 0;
+            font-style: italic;
+        }
+        #status:empty { padding: 0; }
+
+        /* ========== زر الفهرس ========== */
+        .toggle-index-btn {
+            background: linear-gradient(145deg, #5c4530, #3e2c1c);
+            color: #f4e4bc;
+            border: 1px solid #2a1e12;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin: 20px 0 10px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            font-family: 'Georgia', 'Amiri', serif;
+            transition: all var(--transition-speed) ease;
+        }
+        .toggle-index-btn:hover {
+            background: linear-gradient(145deg, #6f563a, #5c4530);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+        }
+
+        .notes-list {
+            margin-top: 10px;
+            border-top: 2px double var(--paper-border);
+            padding-top: 15px;
+            display: none;
+        }
+        .notes-list.visible { display: block; }
+
+        #notesContainer {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        /* ========== بطاقة الملاحظة ========== */
+        .note-card {
+            background:
+                radial-gradient(circle at 80% 20%, rgba(180, 140, 80, 0.06) 0%, transparent 40%),
+                var(--paper-card);
+            border: 1px solid var(--paper-border);
+            border-radius: 4px;
+            padding: 18px;
+            box-shadow:
+                0 2px 5px rgba(120, 80, 40, 0.15),
+                inset 0 0 20px rgba(160, 120, 60, 0.05);
+            position: relative;
+        }
+        .note-card:hover {
+            box-shadow:
+                0 4px 12px rgba(120, 80, 40, 0.25),
+                inset 0 0 20px rgba(160, 120, 60, 0.08);
+            border-color: #a8845a;
+        }
+
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            font-size: 13px;
+            color: var(--ink-light);
+            font-style: italic;
+            border-bottom: 1px dashed var(--paper-border);
+            padding-bottom: 8px;
+        }
+
+        .note-text {
+            font-size: 16px;
+            line-height: 1.8;
+            font-weight: 500;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            color: var(--ink-dark);
+            margin-bottom: 12px;
+            font-family: 'Georgia', 'Amiri', serif;
+        }
+
+        /* ========== أزرار الإجراءات ========== */
+        .btn-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+        }
+        .action-btn {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 6px;
+            border: 1px solid;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-family: 'Georgia', 'Amiri', serif;
+            transition: all 0.2s ease;
+        }
+        .edit-btn {
+            background: #e8dcc0;
+            color: #6f4620;
+            border-color: var(--paper-border);
+        }
+        .edit-btn:hover {
+            background: #dcc99a;
+            transform: translateY(-1px);
+        }
+        .delete-btn {
+            background: #ecd5d5;
+            color: var(--danger-color);
+            border-color: #c99a9a;
+        }
+        .delete-btn:hover {
+            background: #e0bcbc;
+            transform: translateY(-1px);
+        }
+
+        /* ========== صندوق المرفقات ========== */
+        .attachments-box {
+            display: flex;
+            gap: 10px;
+            margin: 12px 0;
+            flex-wrap: wrap;
+        }
+
+        .attachment-btn {
+            flex: 1;
+            min-width: 180px;
+            padding: 12px 15px;
+            border-radius: 6px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            border: 2px solid;
+            user-select: none;
+            font-family: 'Georgia', 'Amiri', serif;
+        }
+        .attachment-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .image-btn {
+            background: #e8dcc0;
+            color: #6f4620;
+            border-color: var(--paper-border);
+        }
+        .image-btn:hover {
+            background: #dcc99a;
+            transform: translateY(-2px);
+        }
+
+        .audio-btn {
+            background: #e0d8c4;
+            color: #5c4530;
+            border-color: #b39b6c;
+        }
+        .audio-btn:hover {
+            background: #d4c9ac;
+            transform: translateY(-2px);
+        }
+
+        #selectedFiles {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        #selectedFiles:empty { margin: 0; }
+
+        .selected-file {
+            background: var(--paper-card);
+            border: 1px solid var(--paper-border);
+            border-radius: 6px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            color: var(--ink-dark);
+        }
+        .selected-file.processing {
+            background: #fdf0c8;
+            border-color: #d4b896;
+        }
+        .selected-file.error {
+            background: #f5d5d5;
+            border-color: #c99a9a;
+        }
+
+        .selected-file-name {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .selected-file-size {
+            font-size: 12px;
+            color: var(--ink-light);
+            white-space: nowrap;
+        }
+
+        .selected-file button {
+            background: #ecd5d5;
+            color: var(--danger-color);
+            border: 1px solid #c99a9a;
+            border-radius: 4px;
+            padding: 4px 8px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .selected-file button:hover { background: #e0bcbc; }
+
+        /* ========== شريط الحجم الإجمالي ========== */
+        .total-size-bar {
+            background: var(--paper-dark);
+            border: 1px solid var(--paper-border);
+            border-radius: 6px;
+            padding: 10px 14px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+            color: var(--ink-medium);
+        }
+        .total-size-bar.warning {
+            background: #f5e3b8;
+            color: #8b5a2b;
+            border-color: #c9a961;
+        }
+        .total-size-bar.danger {
+            background: #f0d0d0;
+            color: #8b1a1a;
+            border-color: #c99a9a;
+        }
+        .total-size-bar strong { font-size: 14px; }
+
+        /* ========== المرفقات في البطاقة ========== */
+        .note-attachments {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .note-attachment-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 4px;
+            border: 3px solid var(--paper-card);
+            box-shadow:
+                0 2px 8px rgba(120, 80, 40, 0.3),
+                0 0 0 1px var(--paper-border);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .note-attachment-image:hover {
+            transform: scale(1.01);
+            box-shadow:
+                0 4px 12px rgba(120, 80, 40, 0.4),
+                0 0 0 1px var(--paper-border);
+        }
+
+        .note-attachment-audio {
+            width: 100%;
+            border-radius: 6px;
+            filter: sepia(30%) contrast(95%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>دفتر الملاحظات السحابي</h2>
+
+        <div class="limit-info">
+            ⚠️ <strong>حد Firestore: 1 MB لكل ملاحظة</strong><br>
+            الصور تُضغط تلقائياً • الصوت المسموح: أقل من 500 KB
+        </div>
+
+        <textarea id="noteInput" placeholder="✍️ اكتب ملاحظاتك هنا..."></textarea>
+
+        <div class="attachments-box">
+            <label class="attachment-btn image-btn" id="imageBtn">
+                🖼️ إضافة صور
+                <input type="file" id="imageInput" accept="image/*" multiple hidden>
+            </label>
+
+            <label class="attachment-btn audio-btn" id="audioBtn">
+                🎵 إضافة ملفات صوتية
+                <input type="file" id="audioInput" accept="audio/*" multiple hidden>
+            </label>
+        </div>
+
+        <div id="selectedFiles"></div>
+
+        <button id="saveBtn" class="text-red">💾 حفظ على السحابة</button>
+
+        <p id="status"></p>
+
+        <button class="toggle-index-btn" id="toggleIndexBtn">📂 إظهار الفهرس</button>
+
+        <div class="notes-list" id="notesList">
+            <div id="notesContainer">⏳ جاري تحميل الملاحظات...</div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import {
+            getFirestore,
+            collection,
+            query,
+            orderBy,
+            getDocs,
+            doc,
+            setDoc,
+            updateDoc,
+            deleteDoc
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        // ========== إعدادات Firebase ==========
+        const firebaseConfig = {
+            apiKey: "AIzaSyBrXDy3FuN6YJlIYTWCD_TsfMvkmiWZiLo",
+            authDomain: "hassanmedication.firebaseapp.com",
+            projectId: "hassanmedication",
+            storageBucket: "hassanmedication.firebasestorage.app",
+            messagingSenderId: "1023452446639",
+            appId: "1:1023452446639:web:dedf54f7ff5c4c93d9795a",
+            measurementId: "G-H1GL9JD2KP"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // ========== الحدود ==========
+        const FIRESTORE_LIMIT = 1_000_000;      // 1 MB
+        const SAFE_LIMIT = 900_000;             // نترك هامش أمان
+        const MAX_IMAGE_DIMENSION = 800;        // أقصى بُعد للصورة
+        const IMAGE_QUALITY = 0.7;              // جودة JPEG
+        const MAX_AUDIO_SIZE = 500_000;         // 500 KB للصوت
+
+        // ========== عناصر DOM ==========
+        const notesContainer = document.getElementById('notesContainer');
+        const statusEl = document.getElementById('status');
+        const noteInput = document.getElementById('noteInput');
+        const saveBtn = document.getElementById('saveBtn');
+        const notesList = document.getElementById('notesList');
+        const toggleBtn = document.getElementById('toggleIndexBtn');
+        const imageInput = document.getElementById('imageInput');
+        const audioInput = document.getElementById('audioInput');
+        const selectedFilesEl = document.getElementById('selectedFiles');
+
+        // ========== الحالة ==========
+        let editingDocId = null;
+        let selectedFiles = [];         // { name, type, size, data(base64) }
+        let editingAttachments = [];
+
+        // ========== إظهار/إخفاء الفهرس ==========
+        let isVisible = false;
+        toggleBtn.addEventListener('click', () => {
+            isVisible = !isVisible;
+            notesList.classList.toggle('visible', isVisible);
+            toggleBtn.textContent = isVisible ? '📂 إخفاء الفهرس' : '📂 إظهار الفهرس';
+        });
+
+        // ========== لون الزر ==========
+        function setButtonColor(color) {
+            saveBtn.classList.remove('text-red', 'text-green');
+            if (color === 'red') saveBtn.classList.add('text-red');
+            else if (color === 'green') saveBtn.classList.add('text-green');
+        }
+
+        // ========== أدوات ==========
+        function bytesToReadable(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
+            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
+        }
+
+        // ضغط الصور بـ Canvas
+        function compressImage(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let { width, height } = img;
+
+                        if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
+                            const ratio = Math.min(
+                                MAX_IMAGE_DIMENSION / width,
+                                MAX_IMAGE_DIMENSION / height
+                            );
+                            width = Math.floor(width * ratio);
+                            height = Math.floor(height * ratio);
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        const dataUrl = canvas.toDataURL('image/jpeg', IMAGE_QUALITY);
+                        resolve(dataUrl);
+                    };
+                    img.onerror = () => reject(new Error('فشل تحميل الصورة'));
+                    img.src = e.target.result;
+                };
+                reader.onerror = () => reject(new Error('فشل قراءة الملف'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // تحويل ملف إلى Base64 (للصوت)
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => resolve(e.target.result);
+                reader.onerror = () => reject(new Error('فشل قراءة الملف'));
+                reader.readAsDataURL(file);
+            });
+        }
+
+        // ========== اختيار الملفات ==========
+        imageInput.addEventListener('change', async () => {
+            await processFiles(imageInput.files, 'image');
+            imageInput.value = '';
+        });
+
+        audioInput.addEventListener('change', async () => {
+            await processFiles(audioInput.files, 'audio');
+            audioInput.value = '';
+        });
+
+        async function processFiles(files, kind) {
+            for (const file of files) {
+                try {
+                    if (kind === 'image') {
+                        if (!file.type.startsWith('image/')) continue;
+
+                        statusEl.style.color = '#2563eb';
+                        statusEl.style.background = '#eff6ff';
+                        statusEl.innerText = `⏳ جاري ضغط الصورة: ${file.name}`;
+
+                        const dataUrl = await compressImage(file);
+                        const estimatedSize = Math.floor(dataUrl.length * 0.75);
+
+                        selectedFiles.push({
+                            name: file.name,
+                            type: 'image/jpeg',
+                            size: estimatedSize,
+                            data: dataUrl
+                        });
+                    } else {
+                        if (!file.type.startsWith('audio/')) continue;
+
+                        if (file.size > MAX_AUDIO_SIZE) {
+                            alert(
+                                `⚠️ الملف الصوتي "${file.name}" كبير جداً\n` +
+                                `الحجم: ${bytesToReadable(file.size)}\n` +
+                                `الحد الأقصى: ${bytesToReadable(MAX_AUDIO_SIZE)}\n\n` +
+                                `جرّب ملفاً أقصر أو بجودة أقل.`
+                            );
+                            continue;
+                        }
+
+                        statusEl.style.color = '#2563eb';
+                        statusEl.style.background = '#eff6ff';
+                        statusEl.innerText = `⏳ جاري معالجة: ${file.name}`;
+
+                        const dataUrl = await fileToBase64(file);
+                        selectedFiles.push({
+                            name: file.name,
+                            type: file.type,
+                            size: file.size,
+                            data: dataUrl
+                        });
+                    }
+                } catch (err) {
+                    alert(`❌ فشل معالجة "${file.name}": ${err.message}`);
+                }
+            }
+
+            statusEl.innerText = '';
+            statusEl.style.background = 'transparent';
+            renderSelectedFiles();
+        }
+
+        // ========== عرض الملفات المختارة ==========
+        function renderSelectedFiles() {
+            selectedFilesEl.innerHTML = '';
+
+            if (selectedFiles.length === 0) return;
+
+            let totalSize = 0;
+
+            selectedFiles.forEach((file, index) => {
+                totalSize += file.size;
+
+                const row = document.createElement('div');
+                row.className = 'selected-file';
+
+                const icon = file.type.startsWith('image/') ? '🖼️' : '🎵';
+
+                const name = document.createElement('span');
+                name.className = 'selected-file-name';
+                name.textContent = `${icon} ${file.name}`;
+
+                const size = document.createElement('span');
+                size.className = 'selected-file-size';
+                size.textContent = bytesToReadable(file.size);
+
+                const removeBtn = document.createElement('button');
+                removeBtn.type = 'button';
+                removeBtn.textContent = '❌';
+                removeBtn.addEventListener('click', () => {
+                    selectedFiles.splice(index, 1);
+                    renderSelectedFiles();
+                });
+
+                row.appendChild(name);
+                row.appendChild(size);
+                row.appendChild(removeBtn);
+                selectedFilesEl.appendChild(row);
+            });
+
+            // شريط الحجم الإجمالي
+            const bar = document.createElement('div');
+            bar.className = 'total-size-bar';
+            const percent = Math.round((totalSize / SAFE_LIMIT) * 100);
+            bar.innerHTML = `
+                <span>📦 الحجم الإجمالي للمرفقات</span>
+                <strong>${bytesToReadable(totalSize)} / ${bytesToReadable(SAFE_LIMIT)} (${percent}%)</strong>
+            `;
+
+            if (totalSize > SAFE_LIMIT) {
+                bar.classList.add('danger');
+            } else if (totalSize > SAFE_LIMIT * 0.7) {
+                bar.classList.add('warning');
+            }
+
+            selectedFilesEl.appendChild(bar);
+        }
+
+        // ========== جلب الملاحظات ==========
+        async function fetchNotes() {
+            try {
+                const q = query(
+                    collection(db, "notes"),
+                    orderBy("timestamp", "desc")
+                );
+                const querySnapshot = await getDocs(q);
+                notesContainer.innerHTML = '';
+
+                if (querySnapshot.empty) {
+                    notesContainer.innerHTML =
+                        '<p style="text-align:center;color:#94a3b8;padding:20px;">لا توجد ملاحظات بعد</p>';
+                    return;
+                }
+
+                querySnapshot.forEach((docSnap) => {
+                    const data = docSnap.data();
+                    const docId = docSnap.id;
+
+                    let dateStr = '';
+                    try {
+                        const d = data.timestamp?.toDate
+                            ? data.timestamp.toDate()
+                            : new Date(data.timestamp);
+                        dateStr = d.toLocaleString('ar-EG', {
+                            year: 'numeric', month: 'short', day: 'numeric',
+                            hour: '2-digit', minute: '2-digit'
+                        });
+                    } catch (e) { dateStr = 'تاريخ غير محدد'; }
+
+                    const textContent = data.text || data.name || 'ملاحظة فارغة';
+
+                    const card = document.createElement('div');
+                    card.className = 'note-card';
+
+                    const header = document.createElement('div');
+                    header.className = 'note-header';
+                    const dateSpan = document.createElement('span');
+                    dateSpan.textContent = `📅 ${dateStr}`;
+                    header.appendChild(dateSpan);
+                    card.appendChild(header);
+
+                    const textEl = document.createElement('div');
+                    textEl.className = 'note-text';
+                    textEl.textContent = textContent;
+                    card.appendChild(textEl);
+
+                    const attachments = data.attachments || [];
+                    if (attachments.length > 0) {
+                        const attachmentsDiv = document.createElement('div');
+                        attachmentsDiv.className = 'note-attachments';
+
+                        attachments.forEach(file => {
+                            const src = file.data || file.url;
+                            if (!src) return;
+
+                            if (file.type && file.type.startsWith('image/')) {
+                                const img = document.createElement('img');
+                                img.src = src;
+                                img.alt = file.name || 'صورة';
+                                img.className = 'note-attachment-image';
+                                img.title = 'اضغط لعرض الصورة بحجمها الكامل';
+                                img.addEventListener('click', () => {
+                                    const w = window.open();
+                                    w.document.write(
+                                        `<title>${file.name || 'صورة'}</title>` +
+                                        `<body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;">` +
+                                        `<img src="${src}" style="max-width:100%;max-height:100vh;">` +
+                                        `</body>`
+                                    );
+                                });
+                                attachmentsDiv.appendChild(img);
+                            } else if (file.type && file.type.startsWith('audio/')) {
+                                const audio = document.createElement('audio');
+                                audio.controls = true;
+                                audio.src = src;
+                                audio.className = 'note-attachment-audio';
+                                attachmentsDiv.appendChild(audio);
+                            }
+                        });
+
+                        if (attachmentsDiv.children.length > 0) {
+                            card.appendChild(attachmentsDiv);
+                        }
+                    }
+
+                    const btnGroup = document.createElement('div');
+                    btnGroup.className = 'btn-group';
+
+                    const editBtn = document.createElement('button');
+                    editBtn.className = 'action-btn edit-btn';
+                    editBtn.innerHTML = '✏️ تعديل';
+
+                    editBtn.addEventListener('click', () => {
+                        noteInput.value = textContent;
+                        editingAttachments = data.attachments || [];
+                        selectedFiles = [];
+                        renderSelectedFiles();
+
+                        saveBtn.textContent = '✅ تحديث الملاحظة';
+                        saveBtn.classList.add('update-mode');
+                        setButtonColor('green');
+                        editingDocId = docId;
+
+                        noteInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        noteInput.focus();
+
+                        statusEl.style.color = '#2563eb';
+                        statusEl.style.background = '#eff6ff';
+                        statusEl.innerText = '✏️ جارٍ التعديل... يمكنك إضافة صور أو ملفات صوتية ثم اضغط "تحديث الملاحظة"';
+                    });
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'action-btn delete-btn';
+                    deleteBtn.innerHTML = '🗑️ حذف';
+
+                    deleteBtn.addEventListener('click', async (e) => {
+                        e.stopPropagation();
+                        if (!confirm('هل أنت متأكد من حذف هذه الملاحظة نهائياً؟')) return;
+
+                        try {
+                            statusEl.style.color = '#2563eb';
+                            statusEl.style.background = '#eff6ff';
+                            statusEl.innerText = '⏳ جاري الحذف...';
+
+                            await deleteDoc(doc(db, "notes", docId));
+
+                            statusEl.style.color = '#16a34a';
+                            statusEl.style.background = '#f0fdf4';
+                            statusEl.innerText = '✅ تم الحذف بنجاح!';
+
+                            await fetchNotes();
+
+                            setTimeout(() => {
+                                statusEl.innerText = '';
+                                statusEl.style.background = 'transparent';
+                            }, 2500);
+                        } catch (error) {
+                            statusEl.style.color = '#dc2626';
+                            statusEl.style.background = '#fef2f2';
+                            statusEl.innerText = '❌ خطأ في الحذف: ' + error.message;
+                        }
+                    });
+
+                    btnGroup.appendChild(editBtn);
+                    btnGroup.appendChild(deleteBtn);
+                    card.appendChild(btnGroup);
+
+                    notesContainer.appendChild(card);
+                });
+
+            } catch (error) {
+                notesContainer.innerHTML =
+                    `<p style="color:#dc2626;text-align:center;">خطأ في تحميل الملاحظات: ${error.message}</p>`;
+                console.error(error);
+            }
+        }
+
+        // ========== حساب حجم المستند ==========
+        function estimateDocumentSize(text, attachments) {
+            let size = text.length;
+            attachments.forEach(a => {
+                size += (a.data || '').length;
+                size += (a.name || '').length;
+                size += (a.type || '').length;
+            });
+            return size;
+        }
+
+        // ========== حفظ أو تحديث ==========
+        saveBtn.addEventListener('click', async () => {
+            const noteText = noteInput.value.trim();
+
+            if (!noteText && selectedFiles.length === 0 && editingAttachments.length === 0) {
+                statusEl.style.color = '#dc2626';
+                statusEl.style.background = '#fef2f2';
+                statusEl.innerText = '⚠️ اكتب ملاحظة أو أضف صورة/ملف صوتي أولاً!';
+                setButtonColor('red');
+                return;
+            }
+
+            try {
+                // ========== تحديث ==========
+                if (editingDocId) {
+                    const allAttachments = [...editingAttachments, ...selectedFiles];
+
+                    const docSize = estimateDocumentSize(noteText, allAttachments);
+                    if (docSize > FIRESTORE_LIMIT) {
+                        statusEl.style.color = '#dc2626';
+                        statusEl.style.background = '#fef2f2';
+                        statusEl.innerText =
+                            `❌ الحجم الإجمالي كبير جداً (${bytesToReadable(docSize)}). ` +
+                            `الحد الأقصى ${bytesToReadable(FIRESTORE_LIMIT)}. ` +
+                            `أزل بعض المرفقات.`;
+                        setButtonColor('red');
+                        return;
+                    }
+
+                    statusEl.style.color = '#2563eb';
+                    statusEl.style.background = '#eff6ff';
+                    statusEl.innerText = '⏳ جاري تحديث الملاحظة...';
+
+                    await updateDoc(doc(db, "notes", editingDocId), {
+                        text: noteText,
+                        attachments: allAttachments,
+                        timestamp: new Date()
+                    });
+
+                    statusEl.style.color = '#16a34a';
+                    statusEl.style.background = '#f0fdf4';
+                    statusEl.innerText = '✅ تم تحديث الملاحظة بنجاح!';
+
+                    saveBtn.textContent = '💾 حفظ على السحابة';
+                    saveBtn.classList.remove('update-mode');
+                    setButtonColor('green');
+
+                    editingDocId = null;
+                    editingAttachments = [];
+                    selectedFiles = [];
+                    noteInput.value = '';
+                    renderSelectedFiles();
+                }
+
+                // ========== إضافة جديدة ==========
+                else {
+                    const docSize = estimateDocumentSize(noteText, selectedFiles);
+                    if (docSize > FIRESTORE_LIMIT) {
+                        statusEl.style.color = '#dc2626';
+                        statusEl.style.background = '#fef2f2';
+                        statusEl.innerText =
+                            `❌ الحجم الإجمالي كبير جداً (${bytesToReadable(docSize)}). ` +
+                            `الحد الأقصى ${bytesToReadable(FIRESTORE_LIMIT)}. ` +
+                            `أزل بعض المرفقات.`;
+                        setButtonColor('red');
+                        return;
+                    }
+
+                    statusEl.style.color = '#2563eb';
+                    statusEl.style.background = '#eff6ff';
+                    statusEl.innerText = '⏳ جاري حفظ الملاحظة...';
+
+                    const newDocRef = doc(collection(db, "notes"));
+
+                    await setDoc(newDocRef, {
+                        text: noteText,
+                        attachments: selectedFiles,
+                        timestamp: new Date()
+                    });
+
+                    statusEl.style.color = '#16a34a';
+                    statusEl.style.background = '#f0fdf4';
+                    statusEl.innerText = '✅ تم الحفظ بنجاح!';
+                    setButtonColor('green');
+
+                    selectedFiles = [];
+                    noteInput.value = '';
+                    renderSelectedFiles();
+                }
+
+                await fetchNotes();
+
+                setTimeout(() => {
+                    if (!editingDocId) {
+                        setButtonColor('red');
+                        saveBtn.textContent = '💾 حفظ على السحابة';
+                    }
+                }, 3000);
+
+            } catch (e) {
+                statusEl.style.color = '#dc2626';
+                statusEl.style.background = '#fef2f2';
+                statusEl.innerText = '❌ حدث خطأ: ' + e.message;
+                setButtonColor('red');
+                console.error('خطأ:', e);
+            }
+        });
+
+        noteInput.addEventListener('input', () => {
+            if (noteInput.value.trim().length > 0) {
+                setButtonColor('red');
+            }
+        });
+
+        // ========== تشغيل ==========
+        fetchNotes();
+    </script>
+</body>
+</html>
