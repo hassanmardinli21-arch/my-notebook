@@ -1,16 +1,18 @@
 async function exportNotes() {
-    const q = query(collection(db,"notes"), orderBy("timestamp","desc"));
+    const q = query(collection(db, "notes"), orderBy("timestamp", "desc"));
     const snap = await getDocs(q);
     const notes = [];
+    
     snap.forEach(d => {
         const data = d.data();
         notes.push({
             id: d.id,
-            text: data.text || '',
+            text: data.text || "",
             attachments: data.attachments || [],
             timestamp: data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : data.timestamp
         });
     });
+
     const payload = {
         app: 'cloud-notebook',
         version: 1,
@@ -18,10 +20,17 @@ async function exportNotes() {
         count: notes.length,
         notes
     };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
+
+    // تعريف dateStr بشكل صحيح
+    const now = new Date();
+    const dateStr = now.toISOString().slice(0, 19).replace(/:/g, '-'); // مثال: 2023-10-27-14-30-00
+
+    // استخدام علامات backtick للقالب النصي
     a.download = `notes-backup-${dateStr}.json`;
     a.click();
     URL.revokeObjectURL(url);
