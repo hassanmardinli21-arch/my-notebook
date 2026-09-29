@@ -92,7 +92,6 @@
         #status { text-align: center; margin-top: 15px; font-size: 15px; font-weight: 600; padding: 10px; border-radius: 6px; transition: all 0.2s ease; min-height: 0; font-style: italic; }
         #status:empty { padding: 0; }
 
-        /* أزرار التصدير والاستيراد */
         .backup-box { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
         .backup-btn {
             flex: 1; min-width: 150px; padding: 12px 15px; border-radius: 6px;
@@ -100,10 +99,11 @@
             border: 2px solid; font-family: 'Georgia', 'Amiri', serif;
             transition: all 0.2s ease; user-select: none;
         }
+        .backup-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .export-btn { background: #e8dcc0; color: #6f4620; border-color: var(--paper-border); }
-        .export-btn:hover { background: #dcc99a; transform: translateY(-2px); }
+        .export-btn:hover:not(:disabled) { background: #dcc99a; transform: translateY(-2px); }
         .import-btn { background: #dfe8d0; color: #4a6b32; border-color: #a8bf8a; }
-        .import-btn:hover { background: #cfdcc0; transform: translateY(-2px); }
+        .import-btn:hover:not(:disabled) { background: #cfdcc0; transform: translateY(-2px); }
 
         .toggle-index-btn {
             background: linear-gradient(145deg, #5c4530, #3e2c1c); color: #f4e4bc;
@@ -126,20 +126,28 @@
         .btn-group { display: flex; gap: 8px; margin-top: 12px; }
         .action-btn { flex: 1; padding: 8px 12px; border-radius: 6px; border: 1px solid; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Georgia', 'Amiri', serif; }
         .edit-btn { background: #e8dcc0; color: #6f4620; border-color: var(--paper-border); }
+        .edit-btn:hover { background: #dcc99a; }
         .delete-btn { background: #ecd5d5; color: var(--danger-color); border-color: #c99a9a; }
+        .delete-btn:hover { background: #e0bcbc; }
         .attachments-box { display: flex; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
-        .attachment-btn { flex: 1; min-width: 180px; padding: 12px 15px; border-radius: 6px; text-align: center; cursor: pointer; font-size: 16px; font-weight: 600; border: 2px solid; user-select: none; }
+        .attachment-btn { flex: 1; min-width: 180px; padding: 12px 15px; border-radius: 6px; text-align: center; cursor: pointer; font-size: 16px; font-weight: 600; border: 2px solid; user-select: none; font-family: 'Georgia', 'Amiri', serif; }
         .image-btn { background: #e8dcc0; color: #6f4620; border-color: var(--paper-border); }
+        .image-btn:hover { background: #dcc99a; transform: translateY(-2px); }
         .audio-btn { background: #e0d8c4; color: #5c4530; border-color: #b39b6c; }
+        .audio-btn:hover { background: #d4c9ac; transform: translateY(-2px); }
         #selectedFiles { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
+        #selectedFiles:empty { margin: 0; }
         .selected-file { background: var(--paper-card); border: 1px solid var(--paper-border); border-radius: 6px; padding: 10px; display: flex; align-items: center; gap: 10px; font-size: 14px; }
         .selected-file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .selected-file-size { font-size: 12px; color: var(--ink-light); }
         .selected-file button { background: #ecd5d5; color: var(--danger-color); border: 1px solid #c99a9a; border-radius: 4px; padding: 4px 8px; cursor: pointer; }
-        .total-size-bar { background: var(--paper-dark); border: 1px solid var(--paper-border); border-radius: 6px; padding: 10px 14px; font-size: 13px; display: flex; justify-content: space-between; margin-top: 8px; }
+        .selected-file button:hover { background: #e0bcbc; }
+        .total-size-bar { background: var(--paper-dark); border: 1px solid var(--paper-border); border-radius: 6px; padding: 10px 14px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; margin-top: 8px; color: var(--ink-medium); }
+        .total-size-bar.warning { background: #f5e3b8; color: #8b5a2b; }
         .total-size-bar.danger { background: #f0d0d0; color: #8b1a1a; border-color: #c99a9a; }
         .note-attachments { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
         .note-attachment-image { max-width: 100%; max-height: 300px; border-radius: 4px; border: 3px solid var(--paper-card); box-shadow: 0 2px 8px rgba(120, 80, 40, 0.3), 0 0 0 1px var(--paper-border); cursor: pointer; }
+        .note-attachment-image:hover { transform: scale(1.01); }
         .note-attachment-audio { width: 100%; border-radius: 6px; filter: sepia(30%) contrast(95%); }
     </style>
 </head>
@@ -171,7 +179,6 @@
 
         <p id="status"></p>
 
-        <!-- أزرار التصدير والاستيراد -->
         <div class="backup-box">
             <button type="button" class="backup-btn export-btn" id="exportBtn">📤 تصدير الملاحظات</button>
             <button type="button" class="backup-btn import-btn" id="importBtn">📥 استيراد الملاحظات</button>
@@ -253,14 +260,13 @@
                 ok:   { color: '#16a34a', bg: '#f0fdf4' },
                 err:  { color: '#dc2626', bg: '#fef2f2' }
             };
-            const c = palette[kind];
+            const c = palette[kind] || palette.info;
             if (!msg) { statusEl.innerText = ''; statusEl.style.background = 'transparent'; return; }
             statusEl.style.color = c.color;
             statusEl.style.background = c.bg;
             statusEl.innerText = msg;
         }
 
-        // ========== ضغط الصور ==========
         function compressImage(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -344,10 +350,12 @@
                 const row = document.createElement('div');
                 row.className = 'selected-file';
                 const icon = file.type.startsWith('image/') ? '🖼️' : '🎵';
-                row.innerHTML = `
-                    <span class="selected-file-name">${icon} ${file.name}</span>
-                    <span class="selected-file-size">${bytesToReadable(file.size)}</span>
-                `;
+                const name = document.createElement('span');
+                name.className = 'selected-file-name';
+                name.textContent = `${icon} ${file.name}`;
+                const size = document.createElement('span');
+                size.className = 'selected-file-size';
+                size.textContent = bytesToReadable(file.size);
                 const removeBtn = document.createElement('button');
                 removeBtn.type = 'button';
                 removeBtn.textContent = '❌';
@@ -355,6 +363,8 @@
                     selectedFiles.splice(index, 1);
                     renderSelectedFiles();
                 });
+                row.appendChild(name);
+                row.appendChild(size);
                 row.appendChild(removeBtn);
                 selectedFilesEl.appendChild(row);
             });
@@ -363,10 +373,10 @@
             const percent = Math.round((totalSize / SAFE_LIMIT) * 100);
             bar.innerHTML = `<span>📦 الحجم الإجمالي</span><strong>${bytesToReadable(totalSize)} / ${bytesToReadable(SAFE_LIMIT)} (${percent}%)</strong>`;
             if (totalSize > SAFE_LIMIT) bar.classList.add('danger');
+            else if (totalSize > SAFE_LIMIT * 0.7) bar.classList.add('warning');
             selectedFilesEl.appendChild(bar);
         }
 
-        // ========== جلب الملاحظات ==========
         async function fetchNotes() {
             try {
                 const q = query(collection(db, "notes"), orderBy("timestamp", "desc"));
@@ -405,6 +415,7 @@
                             if (file.type?.startsWith('image/')) {
                                 const img = document.createElement('img');
                                 img.src = src; img.className = 'note-attachment-image'; img.alt = file.name || 'صورة';
+                                img.title = 'اضغط لعرض الصورة بحجمها الكامل';
                                 img.addEventListener('click', () => {
                                     const w = window.open();
                                     w.document.write(`<title>${file.name || 'صورة'}</title><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="${src}" style="max-width:100%;max-height:100vh;"></body>`);
@@ -434,7 +445,7 @@
                         editingDocId = docId;
                         noteInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         noteInput.focus();
-                        showStatus('✏️ جارٍ التعديل...', 'info');
+                        showStatus('✏️ جارٍ التعديل... يمكنك إضافة صور أو ملفات صوتية ثم اضغط "تحديث الملاحظة"', 'info');
                     });
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'action-btn delete-btn';
@@ -444,7 +455,7 @@
                         try {
                             showStatus('⏳ جاري الحذف...', 'info');
                             await deleteDoc(doc(db, "notes", docId));
-                            showStatus('✅ تم الحذف!', 'ok');
+                            showStatus('✅ تم الحذف بنجاح!', 'ok');
                             await fetchNotes();
                             setTimeout(() => showStatus(''), 2500);
                         } catch (error) {
@@ -457,7 +468,8 @@
                     notesContainer.appendChild(card);
                 });
             } catch (error) {
-                notesContainer.innerHTML = `<p style="color:#dc2626;text-align:center;">خطأ: ${error.message}</p>`;
+                notesContainer.innerHTML = `<p style="color:#dc2626;text-align:center;">خطأ في تحميل الملاحظات: ${error.message}</p>`;
+                console.error(error);
             }
         }
 
@@ -469,11 +481,10 @@
             return size;
         }
 
-        // ========== حفظ / تحديث ==========
         saveBtn.addEventListener('click', async () => {
             const noteText = noteInput.value.trim();
             if (!noteText && selectedFiles.length === 0 && editingAttachments.length === 0) {
-                showStatus('⚠️ اكتب ملاحظة أو أضف صورة/ملف صوتي!', 'err');
+                showStatus('⚠️ اكتب ملاحظة أو أضف صورة/ملف صوتي أولاً!', 'err');
                 setButtonColor('red');
                 return;
             }
@@ -481,14 +492,15 @@
                 if (editingDocId) {
                     const allAtt = [...editingAttachments, ...selectedFiles];
                     if (estimateDocumentSize(noteText, allAtt) > FIRESTORE_LIMIT) {
-                        showStatus('❌ الحجم الإجمالي كبير جداً!', 'err');
+                        showStatus(`❌ الحجم الإجمالي كبير جداً (${bytesToReadable(estimateDocumentSize(noteText, allAtt))}).`, 'err');
+                        setButtonColor('red');
                         return;
                     }
-                    showStatus('⏳ جاري التحديث...', 'info');
+                    showStatus('⏳ جاري تحديث الملاحظة...', 'info');
                     await updateDoc(doc(db, "notes", editingDocId), {
                         text: noteText, attachments: allAtt, timestamp: new Date()
                     });
-                    showStatus('✅ تم التحديث!', 'ok');
+                    showStatus('✅ تم تحديث الملاحظة بنجاح!', 'ok');
                     saveBtn.textContent = '💾 حفظ على السحابة';
                     saveBtn.classList.remove('update-mode');
                     setButtonColor('green');
@@ -499,14 +511,15 @@
                     renderSelectedFiles();
                 } else {
                     if (estimateDocumentSize(noteText, selectedFiles) > FIRESTORE_LIMIT) {
-                        showStatus('❌ الحجم الإجمالي كبير جداً!', 'err');
+                        showStatus(`❌ الحجم الإجمالي كبير جداً (${bytesToReadable(estimateDocumentSize(noteText, selectedFiles))}).`, 'err');
+                        setButtonColor('red');
                         return;
                     }
-                    showStatus('⏳ جاري الحفظ...', 'info');
+                    showStatus('⏳ جاري حفظ الملاحظة...', 'info');
                     await setDoc(doc(collection(db, "notes")), {
                         text: noteText, attachments: selectedFiles, timestamp: new Date()
                     });
-                    showStatus('✅ تم الحفظ!', 'ok');
+                    showStatus('✅ تم الحفظ بنجاح!', 'ok');
                     setButtonColor('green');
                     selectedFiles = [];
                     noteInput.value = '';
@@ -522,6 +535,7 @@
             } catch (e) {
                 showStatus('❌ حدث خطأ: ' + e.message, 'err');
                 setButtonColor('red');
+                console.error('خطأ:', e);
             }
         });
 
@@ -529,9 +543,9 @@
             if (noteInput.value.trim().length > 0) setButtonColor('red');
         });
 
-        /* ============================================================
-           ==========        التصدير        ==========================
-           ============================================================ */
+        /* ================================================================
+           ==========              التصدير            ====================
+           ================================================================ */
         exportBtn.addEventListener('click', exportNotes);
 
         async function exportNotes() {
@@ -585,26 +599,28 @@
                 document.body.removeChild(a);
                 setTimeout(() => URL.revokeObjectURL(url), 4000);
 
-                showStatus(`✅ تم تصدير ${notes.length} ملاحظة (${bytesToReadable(blob.size)})`, 'ok');
-                setTimeout(() => showStatus(''), 5000);
+                showStatus(`✅ تم تصدير ${notes.length} ملاحظة (${bytesToReadable(blob.size)}) إلى: notes-backup-${dateStr}.json`, 'ok');
+                setTimeout(() => showStatus(''), 6000);
             } catch (error) {
                 showStatus('❌ فشل التصدير: ' + error.message, 'err');
-                console.error(error);
+                console.error('Export error:', error);
             } finally {
                 exportBtn.disabled = false;
             }
         }
 
-        /* ============================================================
-           ==========        الاستيراد       ==========================
-           ============================================================ */
+        /* ================================================================
+           ==========              الاستيراد          ====================
+           ================================================================ */
         importBtn.addEventListener('click', () => importInput.click());
 
         importInput.addEventListener('change', async () => {
             const file = importInput.files && importInput.files[0];
             importInput.value = '';
-            if (!file) return;
+            if (file) await importNotesFromFile(file);
+        });
 
+        async function importNotesFromFile(file) {
             try {
                 importBtn.disabled = true;
                 showStatus('⏳ جاري قراءة الملف...', 'info');
@@ -614,22 +630,30 @@
                 try { payload = JSON.parse(raw); }
                 catch (e) { throw new Error('الملف ليس بصيغة JSON صالحة'); }
 
-                let incoming = Array.isArray(payload) ? payload
-                    : (payload && Array.isArray(payload.notes)) ? payload.notes : null;
+                let incoming = null;
+                if (Array.isArray(payload)) incoming = payload;
+                else if (payload && Array.isArray(payload.notes)) incoming = payload.notes;
 
-                if (!incoming) throw new Error('لم يتم العثور على قائمة ملاحظات');
-                if (incoming.length === 0) throw new Error('الملف فارغ');
+                if (!incoming) throw new Error('لم يتم العثور على قائمة ملاحظات في الملف');
+                if (incoming.length === 0) throw new Error('الملف لا يحتوي على أي ملاحظات');
+
+                const validNotes = incoming.filter(n => n && typeof n === 'object');
 
                 const proceed = confirm(
-                    `📥 تم العثور على ${incoming.length} ملاحظة.\n` +
-                    `سيتم إضافتها كملاحظات جديدة. متابعة؟`
+                    `📥 تم العثور على ${validNotes.length} ملاحظة في الملف.\n\n` +
+                    `سيتم إضافتها إلى ملاحظاتك الحالية كملاحظات جديدة.\n` +
+                    `هل تريد المتابعة؟`
                 );
-                if (!proceed) { showStatus('↩️ تم الإلغاء.', 'info'); return; }
+                if (!proceed) {
+                    showStatus('↩️ تم إلغاء الاستيراد.', 'info');
+                    setTimeout(() => showStatus(''), 2500);
+                    return;
+                }
 
                 let added = 0, failed = 0;
 
-                for (let i = 0; i < incoming.length; i++) {
-                    const n = incoming[i];
+                for (let i = 0; i < validNotes.length; i++) {
+                    const n = validNotes[i];
                     try {
                         const text = (n.text || '').toString();
                         const attachments = Array.isArray(n.attachments)
@@ -652,15 +676,15 @@
                         }
 
                         await setDoc(doc(collection(db, "notes")), {
-                            text, attachments, timestamp: ts
+                            text: text, attachments: attachments, timestamp: ts
                         });
                         added++;
                     } catch (err) {
-                        console.error(err);
+                        console.error('فشل استيراد ملاحظة:', err);
                         failed++;
                     }
 
-                    showStatus(`⏳ (${i + 1}/${incoming.length}) — ✅ ${added} • ❌ ${failed}`, 'info');
+                    showStatus(`⏳ جاري الاستيراد... (${i + 1}/${validNotes.length}) — ✅ ${added} • ❌ ${failed}`, 'info');
                 }
 
                 await fetchNotes();
@@ -672,17 +696,17 @@
                 }
 
                 showStatus(
-                    `✅ تم الاستيراد: ${added} ملاحظة` + (failed ? ` • فشل ${failed}` : ''),
+                    `✅ تم الاستيراد: ${added} ملاحظة جديدة` + (failed ? ` • فشل ${failed}` : ''),
                     failed > 0 ? 'info' : 'ok'
                 );
-                setTimeout(() => showStatus(''), 6000);
+                setTimeout(() => showStatus(''), 7000);
             } catch (error) {
                 showStatus('❌ فشل الاستيراد: ' + error.message, 'err');
-                console.error(error);
+                console.error('Import error:', error);
             } finally {
                 importBtn.disabled = false;
             }
-        });
+        }
 
         fetchNotes();
     </script>
