@@ -123,12 +123,20 @@
         }
         .note-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; color: var(--ink-light); font-style: italic; border-bottom: 1px dashed var(--paper-border); padding-bottom: 8px; }
         .note-text { font-size: 16px; line-height: 1.8; white-space: pre-wrap; word-wrap: break-word; color: var(--ink-dark); margin-bottom: 12px; }
-        .btn-group { display: flex; gap: 8px; margin-top: 12px; }
-        .action-btn { flex: 1; padding: 8px 12px; border-radius: 6px; border: 1px solid; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Georgia', 'Amiri', serif; }
+        
+        .btn-group { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+        .action-btn { flex: 1; min-width: 80px; padding: 8px 12px; border-radius: 6px; border: 1px solid; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Georgia', 'Amiri', serif; transition: all 0.2s; }
+        
         .edit-btn { background: #e8dcc0; color: #6f4620; border-color: var(--paper-border); }
         .edit-btn:hover { background: #dcc99a; }
+        
+        .copy-btn { background: #d4e2eb; color: #2c5a7a; border-color: #9bb8cc; }
+        .copy-btn:hover { background: #c0d6e3; }
+        .copy-btn.copied { background: #c6e3c6; color: #2f5c2f; border-color: #8ebd8e; }
+        
         .delete-btn { background: #ecd5d5; color: var(--danger-color); border-color: #c99a9a; }
         .delete-btn:hover { background: #e0bcbc; }
+        
         .attachments-box { display: flex; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
         .attachment-btn { flex: 1; min-width: 180px; padding: 12px 15px; border-radius: 6px; text-align: center; cursor: pointer; font-size: 16px; font-weight: 600; border: 2px solid; user-select: none; font-family: 'Georgia', 'Amiri', serif; }
         .image-btn { background: #e8dcc0; color: #6f4620; border-color: var(--paper-border); }
@@ -395,16 +403,20 @@
                         dateStr = d.toLocaleString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
                     } catch (e) { dateStr = 'تاريخ غير محدد'; }
                     const textContent = data.text || 'ملاحظة فارغة';
+                    
                     const card = document.createElement('div');
                     card.className = 'note-card';
+                    
                     const header = document.createElement('div');
                     header.className = 'note-header';
                     header.innerHTML = `<span>📅 ${dateStr}</span>`;
                     card.appendChild(header);
+                    
                     const textEl = document.createElement('div');
                     textEl.className = 'note-text';
                     textEl.textContent = textContent;
                     card.appendChild(textEl);
+                    
                     const attachments = data.attachments || [];
                     if (attachments.length > 0) {
                         const attDiv = document.createElement('div');
@@ -429,8 +441,11 @@
                         });
                         if (attDiv.children.length > 0) card.appendChild(attDiv);
                     }
+                    
                     const btnGroup = document.createElement('div');
                     btnGroup.className = 'btn-group';
+
+                    // 1. زر التعديل
                     const editBtn = document.createElement('button');
                     editBtn.className = 'action-btn edit-btn';
                     editBtn.innerHTML = '✏️ تعديل';
@@ -445,8 +460,31 @@
                         editingDocId = docId;
                         noteInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         noteInput.focus();
-                        showStatus('✏️ جارٍ التعديل... يمكنك إضافة صور أو ملفات صوتية ثم اضغط "تحديث الملاحظة"', 'info');
+                        showStatus('✏️ جارٍ التعديل...', 'info');
                     });
+
+                    // 2. زر النسخ (جديد)
+                    const copyBtn = document.createElement('button');
+                    copyBtn.className = 'action-btn copy-btn';
+                    copyBtn.innerHTML = '📋 نسخ';
+                    copyBtn.addEventListener('click', async () => {
+                        try {
+                            await navigator.clipboard.writeText(textContent);
+                            // تغيير شكل الزر مؤقتاً ليعطي إحساساً بالنجاح
+                            const originalText = copyBtn.innerHTML;
+                            copyBtn.innerHTML = '✅ تم النسخ!';
+                            copyBtn.classList.add('copied');
+                            
+                            setTimeout(() => {
+                                copyBtn.innerHTML = originalText;
+                                copyBtn.classList.remove('copied');
+                            }, 2000);
+                        } catch (err) {
+                            alert('❌ تعذر النسخ تلقائياً. يرجى تحديد النص يدوياً.');
+                        }
+                    });
+
+                    // 3. زر الحذف
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'action-btn delete-btn';
                     deleteBtn.innerHTML = '🗑️ حذف';
@@ -462,9 +500,13 @@
                             showStatus('❌ خطأ في الحذف: ' + error.message, 'err');
                         }
                     });
+
+                    // ترتيب الأزرار: تعديل | نسخ | حذف
                     btnGroup.appendChild(editBtn);
+                    btnGroup.appendChild(copyBtn);
                     btnGroup.appendChild(deleteBtn);
                     card.appendChild(btnGroup);
+
                     notesContainer.appendChild(card);
                 });
             } catch (error) {
@@ -492,7 +534,7 @@
                 if (editingDocId) {
                     const allAtt = [...editingAttachments, ...selectedFiles];
                     if (estimateDocumentSize(noteText, allAtt) > FIRESTORE_LIMIT) {
-                        showStatus(`❌ الحجم الإجمالي كبير جداً (${bytesToReadable(estimateDocumentSize(noteText, allAtt))}).`, 'err');
+                        showStatus(`❌ الحجم الإجمالي كبير جداً.`, 'err');
                         setButtonColor('red');
                         return;
                     }
@@ -511,7 +553,7 @@
                     renderSelectedFiles();
                 } else {
                     if (estimateDocumentSize(noteText, selectedFiles) > FIRESTORE_LIMIT) {
-                        showStatus(`❌ الحجم الإجمالي كبير جداً (${bytesToReadable(estimateDocumentSize(noteText, selectedFiles))}).`, 'err');
+                        showStatus(`❌ الحجم الإجمالي كبير جداً.`, 'err');
                         setButtonColor('red');
                         return;
                     }
@@ -535,7 +577,6 @@
             } catch (e) {
                 showStatus('❌ حدث خطأ: ' + e.message, 'err');
                 setButtonColor('red');
-                console.error('خطأ:', e);
             }
         });
 
@@ -543,9 +584,7 @@
             if (noteInput.value.trim().length > 0) setButtonColor('red');
         });
 
-        /* ================================================================
-           ==========              التصدير            ====================
-           ================================================================ */
+        /* ================= التصدير والاستيراد ================= */
         exportBtn.addEventListener('click', exportNotes);
 
         async function exportNotes() {
@@ -563,9 +602,7 @@
                         id: d.id,
                         text: data.text || "",
                         attachments: data.attachments || [],
-                        timestamp: data.timestamp?.toDate
-                            ? data.timestamp.toDate().toISOString()
-                            : data.timestamp
+                        timestamp: data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : data.timestamp
                     });
                 });
 
@@ -574,46 +611,30 @@
                     return;
                 }
 
-                const payload = {
-                    app: 'cloud-notebook',
-                    version: 1,
-                    exportedAt: new Date().toISOString(),
-                    count: notes.length,
-                    notes
-                };
-
+                const payload = { app: 'cloud-notebook', version: 1, exportedAt: new Date().toISOString(), count: notes.length, notes };
                 const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-
                 const now = new Date();
                 const pad = (n) => String(n).padStart(2, '0');
-                const dateStr =
-                    `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}` +
-                    `_${pad(now.getHours())}-${pad(now.getMinutes())}`;
-
+                const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}`;
+                
                 a.download = `notes-backup-${dateStr}.json`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 setTimeout(() => URL.revokeObjectURL(url), 4000);
-
-                showStatus(`✅ تم تصدير ${notes.length} ملاحظة (${bytesToReadable(blob.size)}) إلى: notes-backup-${dateStr}.json`, 'ok');
-                setTimeout(() => showStatus(''), 6000);
+                showStatus(`✅ تم تصدير ${notes.length} ملاحظة بنجاح.`, 'ok');
+                setTimeout(() => showStatus(''), 5000);
             } catch (error) {
                 showStatus('❌ فشل التصدير: ' + error.message, 'err');
-                console.error('Export error:', error);
             } finally {
                 exportBtn.disabled = false;
             }
         }
 
-        /* ================================================================
-           ==========              الاستيراد          ====================
-           ================================================================ */
         importBtn.addEventListener('click', () => importInput.click());
-
         importInput.addEventListener('change', async () => {
             const file = importInput.files && importInput.files[0];
             importInput.value = '';
@@ -624,85 +645,40 @@
             try {
                 importBtn.disabled = true;
                 showStatus('⏳ جاري قراءة الملف...', 'info');
-
                 const raw = await file.text();
-                let payload;
-                try { payload = JSON.parse(raw); }
-                catch (e) { throw new Error('الملف ليس بصيغة JSON صالحة'); }
+                let payload = JSON.parse(raw);
+                let incoming = Array.isArray(payload) ? payload : (payload && Array.isArray(payload.notes) ? payload.notes : null);
 
-                let incoming = null;
-                if (Array.isArray(payload)) incoming = payload;
-                else if (payload && Array.isArray(payload.notes)) incoming = payload.notes;
+                if (!incoming || incoming.length === 0) throw new Error('الملف لا يحتوي على ملاحظات صالحة.');
 
-                if (!incoming) throw new Error('لم يتم العثور على قائمة ملاحظات في الملف');
-                if (incoming.length === 0) throw new Error('الملف لا يحتوي على أي ملاحظات');
-
-                const validNotes = incoming.filter(n => n && typeof n === 'object');
-
-                const proceed = confirm(
-                    `📥 تم العثور على ${validNotes.length} ملاحظة في الملف.\n\n` +
-                    `سيتم إضافتها إلى ملاحظاتك الحالية كملاحظات جديدة.\n` +
-                    `هل تريد المتابعة؟`
-                );
-                if (!proceed) {
-                    showStatus('↩️ تم إلغاء الاستيراد.', 'info');
-                    setTimeout(() => showStatus(''), 2500);
-                    return;
-                }
+                const proceed = confirm(`📥 تم العثور على ${incoming.length} ملاحظة. سيتم إضافتها كملاحظات جديدة. متابعة؟`);
+                if (!proceed) { showStatus('↩️ تم الإلغاء.', 'info'); setTimeout(() => showStatus(''), 2500); return; }
 
                 let added = 0, failed = 0;
-
-                for (let i = 0; i < validNotes.length; i++) {
-                    const n = validNotes[i];
+                for (let i = 0; i < incoming.length; i++) {
+                    const n = incoming[i];
                     try {
                         const text = (n.text || '').toString();
-                        const attachments = Array.isArray(n.attachments)
-                            ? n.attachments.filter(a => a && (a.data || a.url))
-                                .map(a => ({
-                                    name: a.name || 'ملف',
-                                    type: a.type || '',
-                                    size: a.size || 0,
-                                    data: a.data || a.url || ''
-                                }))
-                            : [];
-
+                        const attachments = Array.isArray(n.attachments) ? n.attachments.filter(a => a && (a.data || a.url)).map(a => ({ name: a.name || 'ملف', type: a.type || '', size: a.size || 0, data: a.data || a.url || '' })) : [];
                         if (!text.trim() && attachments.length === 0) continue;
                         if (estimateDocumentSize(text, attachments) > FIRESTORE_LIMIT) { failed++; continue; }
-
+                        
                         let ts = new Date();
-                        if (n.timestamp) {
-                            const d = new Date(n.timestamp);
-                            if (!isNaN(d.getTime())) ts = d;
-                        }
+                        if (n.timestamp) { const d = new Date(n.timestamp); if (!isNaN(d.getTime())) ts = d; }
 
-                        await setDoc(doc(collection(db, "notes")), {
-                            text: text, attachments: attachments, timestamp: ts
-                        });
+                        await setDoc(doc(collection(db, "notes")), { text, attachments, timestamp: ts });
                         added++;
-                    } catch (err) {
-                        console.error('فشل استيراد ملاحظة:', err);
-                        failed++;
-                    }
-
-                    showStatus(`⏳ جاري الاستيراد... (${i + 1}/${validNotes.length}) — ✅ ${added} • ❌ ${failed}`, 'info');
+                    } catch (err) { failed++; }
+                    showStatus(`⏳ جاري الاستيراد... (${i + 1}/${incoming.length}) — ✅ ${added} • ❌ ${failed}`, 'info');
                 }
 
                 await fetchNotes();
-
-                if (added > 0 && !isVisible) {
-                    isVisible = true;
-                    notesList.classList.add('visible');
-                    toggleBtn.textContent = '📂 إخفاء الفهرس';
-                }
-
-                showStatus(
-                    `✅ تم الاستيراد: ${added} ملاحظة جديدة` + (failed ? ` • فشل ${failed}` : ''),
-                    failed > 0 ? 'info' : 'ok'
-                );
+                if (added > 0 && !isVisible) { isVisible = true; notesList.classList.add('visible'); toggleBtn.textContent = '📂 إخفاء الفهرس'; }
+                
+                showStatus(`✅ تم الاستيراد: ${added} ملاحظة جديدة` + (failed ? ` • فشل ${failed}` : ''), failed > 0 ? 'info' : 'ok');
                 setTimeout(() => showStatus(''), 7000);
             } catch (error) {
                 showStatus('❌ فشل الاستيراد: ' + error.message, 'err');
-                console.error('Import error:', error);
             } finally {
                 importBtn.disabled = false;
             }
