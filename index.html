@@ -165,10 +165,11 @@
 
         <div class="limit-info">
             ⚠️ <strong>حد Firestore: 1 MB لكل ملاحظة</strong><br>
-            الصور تُضغط تلقائياً • الصوت المسموح: أقل من 500 KB
+            الصور تُضغط تلقائياً • الصوت المسموح: أقل من 500 KB<br>
+            <span style="color: #6f4620; font-weight: bold;">💡 يمكنك الآن لصق الصور مباشرة في مربع الكتابة!</span>
         </div>
 
-        <textarea id="noteInput" placeholder="✍️ اكتب ملاحظاتك هنا..."></textarea>
+        <textarea id="noteInput" placeholder="✍️ اكتب ملاحظاتك هنا... (ويمكنك لصق صورة مباشرة هنا)"></textarea>
 
         <div class="attachments-box">
             <label class="attachment-btn image-btn">
@@ -325,10 +326,11 @@
                 try {
                     if (kind === 'image') {
                         if (!file.type.startsWith('image/')) continue;
-                        showStatus(`⏳ جاري ضغط الصورة: ${file.name}`, 'info');
+                        showStatus(`⏳ جاري ضغط الصورة: ${file.name || 'صورة ملصوقة'}`, 'info');
                         const dataUrl = await compressImage(file);
                         selectedFiles.push({
-                            name: file.name, type: 'image/jpeg',
+                            name: file.name || `صورة_ملصوقة_${Date.now()}.jpg`, 
+                            type: 'image/jpeg',
                             size: Math.floor(dataUrl.length * 0.75), data: dataUrl
                         });
                     } else {
@@ -342,7 +344,7 @@
                         selectedFiles.push({ name: file.name, type: file.type, size: file.size, data: dataUrl });
                     }
                 } catch (err) {
-                    alert(`❌ فشل معالجة "${file.name}": ${err.message}`);
+                    alert(`❌ فشل معالجة الملف: ${err.message}`);
                 }
             }
             showStatus('');
@@ -445,7 +447,6 @@
                     const btnGroup = document.createElement('div');
                     btnGroup.className = 'btn-group';
 
-                    // 1. زر التعديل
                     const editBtn = document.createElement('button');
                     editBtn.className = 'action-btn edit-btn';
                     editBtn.innerHTML = '✏️ تعديل';
@@ -463,18 +464,15 @@
                         showStatus('✏️ جارٍ التعديل...', 'info');
                     });
 
-                    // 2. زر النسخ (جديد)
                     const copyBtn = document.createElement('button');
                     copyBtn.className = 'action-btn copy-btn';
                     copyBtn.innerHTML = '📋 نسخ';
                     copyBtn.addEventListener('click', async () => {
                         try {
                             await navigator.clipboard.writeText(textContent);
-                            // تغيير شكل الزر مؤقتاً ليعطي إحساساً بالنجاح
                             const originalText = copyBtn.innerHTML;
                             copyBtn.innerHTML = '✅ تم النسخ!';
                             copyBtn.classList.add('copied');
-                            
                             setTimeout(() => {
                                 copyBtn.innerHTML = originalText;
                                 copyBtn.classList.remove('copied');
@@ -484,7 +482,6 @@
                         }
                     });
 
-                    // 3. زر الحذف
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'action-btn delete-btn';
                     deleteBtn.innerHTML = '🗑️ حذف';
@@ -501,7 +498,6 @@
                         }
                     });
 
-                    // ترتيب الأزرار: تعديل | نسخ | حذف
                     btnGroup.appendChild(editBtn);
                     btnGroup.appendChild(copyBtn);
                     btnGroup.appendChild(deleteBtn);
@@ -582,6 +578,28 @@
 
         noteInput.addEventListener('input', () => {
             if (noteInput.value.trim().length > 0) setButtonColor('red');
+        });
+
+        // ========== دعم لصق الصور مباشرة في مربع النص ==========
+        noteInput.addEventListener('paste', async (event) => {
+            const items = (event.clipboardData || event.originalEvent.clipboardData).items;
+            let hasImage = false;
+
+            for (const item of items) {
+                if (item.type.indexOf('image') !== -1) {
+                    hasImage = true;
+                    const file = item.getAsFile();
+                    if (file) {
+                        await processFiles([file], 'image');
+                    }
+                }
+            }
+
+            if (hasImage) {
+                event.preventDefault(); // منع لصق كود الصورة أو مسارها كنص
+                showStatus('🖼️ تم لصق الصورة وإضافتها للمرفقات!', 'ok');
+                setTimeout(() => showStatus(''), 3000);
+            }
         });
 
         /* ================= التصدير والاستيراد ================= */
