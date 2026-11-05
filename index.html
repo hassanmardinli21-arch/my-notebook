@@ -430,7 +430,6 @@
 
         async function fetchNotes() {
             try {
-                // 🌟 جلب جميع الملاحظات بدون استخدام query معقد (لتجنب الفهرس)
                 const q = query(collection(db, "notes"));
                 const snap = await getDocs(q);
                 
@@ -439,18 +438,15 @@
                     currentNotes.push({ id: d.id, ...d.data() });
                 });
 
-                // 🌟 الترتيب برمجياً داخل المتصفح (المثبتة أولاً، ثم الترتيب اليدوي)
                 currentNotes.sort((a, b) => {
                     const pinA = a.isPinned ? 1 : 0;
                     const pinB = b.isPinned ? 1 : 0;
-                    if (pinA !== pinB) return pinB - pinA; // المثبتة (1) تأتي قبل غير المثبتة (0)
+                    if (pinA !== pinB) return pinB - pinA; 
 
-                    // إذا كان كلاهما مثبت أو غير مثبت، نرتب حسب order (الأقل أولاً)
                     const orderA = a.order || 0;
                     const orderB = b.order || 0;
                     if (orderA !== orderB) return orderA - orderB;
 
-                    // إذا كان الترتيب متساوياً، نرتب حسب الوقت (الأحدث أولاً)
                     const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : new Date(a.timestamp || 0).getTime();
                     const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : new Date(b.timestamp || 0).getTime();
                     return timeB - timeA;
@@ -465,6 +461,7 @@
                 currentNotes.forEach((note, index) => {
                     const data = note;
                     const docId = note.id;
+                    // تأمين القيم الافتراضية لمنع خطأ undefined
                     const isPinned = data.isPinned || false;
 
                     let dateStr = '';
@@ -548,7 +545,7 @@
                     moveUpBtn.addEventListener('click', async () => {
                         const prevNote = currentNotes[index - 1];
                         const prevOrder = prevNote.order || 0;
-                        await updateNoteOrder(docId, { order: prevOrder - 1, isPinned: prevNote.isPinned });
+                        await updateNoteOrder(docId, { order: prevOrder - 1, isPinned: prevNote.isPinned || false });
                     });
 
                     const moveDownBtn = document.createElement('button');
@@ -559,7 +556,7 @@
                     moveDownBtn.addEventListener('click', async () => {
                         const nextNote = currentNotes[index + 1];
                         const nextOrder = nextNote.order || 0;
-                        await updateNoteOrder(docId, { order: nextOrder + 1, isPinned: nextNote.isPinned });
+                        await updateNoteOrder(docId, { order: nextOrder + 1, isPinned: nextNote.isPinned || false });
                     });
 
                     const copyBtn = document.createElement('button');
@@ -636,9 +633,16 @@
                         return;
                     }
                     showStatus('⏳ جاري تحديث الملاحظة...', 'info');
+                    
+                    // تحديث آمن يمنع خطأ undefined
                     await updateDoc(doc(db, "notes", editingDocId), {
-                        text: noteText, attachments: allAtt, timestamp: new Date()
+                        text: noteText, 
+                        attachments: allAtt, 
+                        timestamp: new Date(),
+                        isPinned: false,
+                        order: Date.now()
                     });
+
                     showStatus('✅ تم تحديث الملاحظة بنجاح!', 'ok');
                     saveBtn.textContent = '💾 حفظ على السحابة';
                     saveBtn.classList.remove('update-mode');
