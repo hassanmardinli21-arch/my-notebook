@@ -116,20 +116,48 @@
         .notes-list { margin-top: 10px; border-top: 2px double var(--paper-border); padding-top: 15px; display: none; }
         .notes-list.visible { display: block; }
         #notesContainer { display: flex; flex-direction: column; gap: 15px; margin-top: 10px; }
+        
         .note-card {
             background: radial-gradient(circle at 80% 20%, rgba(180, 140, 80, 0.06) 0%, transparent 40%), var(--paper-card);
             border: 1px solid var(--paper-border); border-radius: 4px; padding: 18px;
             box-shadow: 0 2px 5px rgba(120, 80, 40, 0.15), inset 0 0 20px rgba(160, 120, 60, 0.05);
+            transition: all 0.3s ease;
         }
+        /* تمييز الملاحظة المثبتة */
+        .note-card.pinned {
+            border: 2px solid #b08d57;
+            box-shadow: 0 4px 12px rgba(139, 90, 43, 0.3), inset 0 0 20px rgba(200, 169, 97, 0.2);
+            background: radial-gradient(circle at 80% 20%, rgba(200, 160, 80, 0.1) 0%, transparent 40%), #fdf5df;
+        }
+
         .note-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; color: var(--ink-light); font-style: italic; border-bottom: 1px dashed var(--paper-border); padding-bottom: 8px; }
+        .pin-indicator { font-size: 16px; margin-left: 5px; }
         .note-text { font-size: 16px; line-height: 1.8; white-space: pre-wrap; word-wrap: break-word; color: var(--ink-dark); margin-bottom: 12px; }
         
-        .btn-group { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
-        .action-btn { flex: 1; min-width: 80px; padding: 8px 12px; border-radius: 6px; border: 1px solid; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Georgia', 'Amiri', serif; transition: all 0.2s; }
+        /* ترتيب الأزرار بشكل شبكي مريح */
+        .btn-group { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); 
+            gap: 8px; 
+            margin-top: 12px; 
+        }
+        .action-btn { 
+            padding: 8px 10px; border-radius: 6px; border: 1px solid; 
+            font-size: 13px; font-weight: 600; cursor: pointer; 
+            font-family: 'Georgia', 'Amiri', serif; transition: all 0.2s; 
+            display: flex; align-items: center; justify-content: center; gap: 4px;
+        }
         
         .edit-btn { background: #e8dcc0; color: #6f4620; border-color: var(--paper-border); }
         .edit-btn:hover { background: #dcc99a; }
         
+        .pin-btn { background: #ebdcd0; color: #8b4513; border-color: #c9a07c; }
+        .pin-btn:hover { background: #e0ccbd; }
+        .pin-btn.active { background: #f7e8c8; border-color: #d4af37; color: #a67c00; box-shadow: inset 0 0 5px rgba(212,175,55,0.5); }
+
+        .move-btn { background: #e2e8f0; color: #334155; border-color: #94a3b8; padding: 8px 4px; }
+        .move-btn:hover { background: #cbd5e1; }
+
         .copy-btn { background: #d4e2eb; color: #2c5a7a; border-color: #9bb8cc; }
         .copy-btn:hover { background: #c0d6e3; }
         .copy-btn.copied { background: #c6e3c6; color: #2f5c2f; border-color: #8ebd8e; }
@@ -166,7 +194,7 @@
         <div class="limit-info">
             ⚠️ <strong>حد Firestore: 1 MB لكل ملاحظة</strong><br>
             الصور تُضغط تلقائياً • الصوت المسموح: أقل من 500 KB<br>
-            <span style="color: #6f4620; font-weight: bold;">💡 يمكنك الآن لصق الصور مباشرة في مربع الكتابة!</span>
+            <span style="color: #6f4620; font-weight: bold;">💡 يمكنك لصق الصور، أو استخدام 📌 لتثبيت المهمة بالأعلى!</span>
         </div>
 
         <textarea id="noteInput" placeholder="✍️ اكتب ملاحظاتك هنا... (ويمكنك لصق صورة مباشرة هنا)"></textarea>
@@ -244,6 +272,9 @@
         let selectedFiles = [];
         let editingAttachments = [];
         let isVisible = false;
+        
+        // مصفوفة لحفظ الملاحظات لتمكين الترتيب السريع
+        let currentNotes = []; 
 
         toggleBtn.addEventListener('click', () => {
             isVisible = !isVisible;
@@ -387,18 +418,48 @@
             selectedFilesEl.appendChild(bar);
         }
 
+        // ========== تحديث قاعدة البيانات لترتيب أو تثبيت الملاحظة ==========
+        async function updateNoteOrder(docId, updates) {
+            try {
+                showStatus('⏳ جاري تحديث الترتيب...', 'info');
+                await updateDoc(doc(db, "notes", docId), updates);
+                showStatus('✅ تم تحديث الترتيب!', 'ok');
+                await fetchNotes();
+                setTimeout(() => showStatus(''), 2000);
+            } catch (error) {
+                showStatus('❌ خطأ في التحديث: ' + error.message, 'err');
+                console.error(error);
+            }
+        }
+
         async function fetchNotes() {
             try {
-                const q = query(collection(db, "notes"), orderBy("timestamp", "desc"));
+                // الترتيب: أولاً المثبتة (isPinned=true)، ثم حسب الترتيب اليدوي (order)، ثم التاريخ
+                const q = query(
+                    collection(db, "notes"), 
+                    orderBy("isPinned", "desc"),
+                    orderBy("order", "asc"),
+                    orderBy("timestamp", "desc")
+                );
                 const snap = await getDocs(q);
+                
+                currentNotes = []; // تفريغ المصفوفة
+                snap.forEach(d => {
+                    currentNotes.push({ id: d.id, ...d.data() });
+                });
+
                 notesContainer.innerHTML = '';
-                if (snap.empty) {
+                if (currentNotes.length === 0) {
                     notesContainer.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:20px;">لا توجد ملاحظات بعد</p>';
                     return;
                 }
-                snap.forEach((docSnap) => {
-                    const data = docSnap.data();
-                    const docId = docSnap.id;
+
+                currentNotes.forEach((note, index) => {
+                    const data = note;
+                    const docId = note.id;
+                    const isPinned = data.isPinned || false;
+                    const currentOrder = data.order || 0;
+
                     let dateStr = '';
                     try {
                         const d = data.timestamp?.toDate ? data.timestamp.toDate() : new Date(data.timestamp);
@@ -407,11 +468,11 @@
                     const textContent = data.text || 'ملاحظة فارغة';
                     
                     const card = document.createElement('div');
-                    card.className = 'note-card';
+                    card.className = `note-card ${isPinned ? 'pinned' : ''}`;
                     
                     const header = document.createElement('div');
                     header.className = 'note-header';
-                    header.innerHTML = `<span>📅 ${dateStr}</span>`;
+                    header.innerHTML = `<span>${isPinned ? '<span class="pin-indicator">📌</span>' : ''}📅 ${dateStr}</span>`;
                     card.appendChild(header);
                     
                     const textEl = document.createElement('div');
@@ -447,6 +508,7 @@
                     const btnGroup = document.createElement('div');
                     btnGroup.className = 'btn-group';
 
+                    // زر التعديل
                     const editBtn = document.createElement('button');
                     editBtn.className = 'action-btn edit-btn';
                     editBtn.innerHTML = '✏️ تعديل';
@@ -464,6 +526,44 @@
                         showStatus('✏️ جارٍ التعديل...', 'info');
                     });
 
+                    // زر التثبيت (Pin)
+                    const pinBtn = document.createElement('button');
+                    pinBtn.className = `action-btn pin-btn ${isPinned ? 'active' : ''}`;
+                    pinBtn.innerHTML = isPinned ? '📌 مثبتة' : '📌 تثبيت';
+                    pinBtn.addEventListener('click', async () => {
+                        // عند التثبيت نعطيه رقماً سالباً ليتصدر القائمة
+                        const newOrder = isPinned ? 0 : (Date.now() * -1); 
+                        await updateNoteOrder(docId, { isPinned: !isPinned, order: newOrder });
+                    });
+
+                    // أزرار التحريك اليدوي (رفع / إنزال)
+                    const moveUpBtn = document.createElement('button');
+                    moveUpBtn.className = 'action-btn move-btn';
+                    moveUpBtn.innerHTML = '⬆️ رفع';
+                    moveUpBtn.title = 'تقديم الملاحظة للأعلى';
+                    // منع الرفع إذا كانت أول عنصر
+                    if (index === 0) moveUpBtn.disabled = true;
+                    moveUpBtn.addEventListener('click', async () => {
+                        const prevNote = currentNotes[index - 1];
+                        // نأخذ ترتيب السابق وننقص منه 1 لنصبح قبله
+                        const prevOrder = prevNote.order || 0;
+                        await updateNoteOrder(docId, { order: prevOrder - 1, isPinned: prevNote.isPinned });
+                    });
+
+                    const moveDownBtn = document.createElement('button');
+                    moveDownBtn.className = 'action-btn move-btn';
+                    moveDownBtn.innerHTML = '⬇️ إنزال';
+                    moveDownBtn.title = 'تأخير الملاحظة للأسفل';
+                    // منع الإنزال إذا كانت آخر عنصر
+                    if (index === currentNotes.length - 1) moveDownBtn.disabled = true;
+                    moveDownBtn.addEventListener('click', async () => {
+                        const nextNote = currentNotes[index + 1];
+                        // نأخذ ترتيب التالي ونزيد عليه 1 لنصبح بعده
+                        const nextOrder = nextNote.order || 0;
+                        await updateNoteOrder(docId, { order: nextOrder + 1, isPinned: nextNote.isPinned });
+                    });
+
+                    // زر النسخ
                     const copyBtn = document.createElement('button');
                     copyBtn.className = 'action-btn copy-btn';
                     copyBtn.innerHTML = '📋 نسخ';
@@ -482,6 +582,7 @@
                         }
                     });
 
+                    // زر الحذف
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'action-btn delete-btn';
                     deleteBtn.innerHTML = '🗑️ حذف';
@@ -498,7 +599,11 @@
                         }
                     });
 
+                    // إضافة الأزرار للبطاقة
                     btnGroup.appendChild(editBtn);
+                    btnGroup.appendChild(pinBtn);
+                    btnGroup.appendChild(moveUpBtn);
+                    btnGroup.appendChild(moveDownBtn);
                     btnGroup.appendChild(copyBtn);
                     btnGroup.appendChild(deleteBtn);
                     card.appendChild(btnGroup);
@@ -554,9 +659,16 @@
                         return;
                     }
                     showStatus('⏳ جاري حفظ الملاحظة...', 'info');
+                    
+                    // إعطاء الملاحظة الجديدة ترتيباً أولياً (رقم موجب كبير لتكون بالأسفل)
                     await setDoc(doc(collection(db, "notes")), {
-                        text: noteText, attachments: selectedFiles, timestamp: new Date()
+                        text: noteText, 
+                        attachments: selectedFiles, 
+                        timestamp: new Date(),
+                        isPinned: false,
+                        order: Date.now() // نستخدم الوقت كرقم تسلسلي
                     });
+                    
                     showStatus('✅ تم الحفظ بنجاح!', 'ok');
                     setButtonColor('green');
                     selectedFiles = [];
@@ -580,7 +692,6 @@
             if (noteInput.value.trim().length > 0) setButtonColor('red');
         });
 
-        // ========== دعم لصق الصور مباشرة في مربع النص ==========
         noteInput.addEventListener('paste', async (event) => {
             const items = (event.clipboardData || event.originalEvent.clipboardData).items;
             let hasImage = false;
@@ -596,7 +707,7 @@
             }
 
             if (hasImage) {
-                event.preventDefault(); // منع لصق كود الصورة أو مسارها كنص
+                event.preventDefault(); 
                 showStatus('🖼️ تم لصق الصورة وإضافتها للمرفقات!', 'ok');
                 setTimeout(() => showStatus(''), 3000);
             }
@@ -620,7 +731,9 @@
                         id: d.id,
                         text: data.text || "",
                         attachments: data.attachments || [],
-                        timestamp: data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : data.timestamp
+                        timestamp: data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : data.timestamp,
+                        isPinned: data.isPinned || false,
+                        order: data.order || 0
                     });
                 });
 
@@ -629,7 +742,7 @@
                     return;
                 }
 
-                const payload = { app: 'cloud-notebook', version: 1, exportedAt: new Date().toISOString(), count: notes.length, notes };
+                const payload = { app: 'cloud-notebook', version: 2, exportedAt: new Date().toISOString(), count: notes.length, notes };
                 const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -683,8 +796,14 @@
                         
                         let ts = new Date();
                         if (n.timestamp) { const d = new Date(n.timestamp); if (!isNaN(d.getTime())) ts = d; }
+                        
+                        // استيراد الترتيب والتثبيت إذا وجد
+                        const isPinned = n.isPinned || false;
+                        const order = n.order || Date.now() + i;
 
-                        await setDoc(doc(collection(db, "notes")), { text, attachments, timestamp: ts });
+                        await setDoc(doc(collection(db, "notes")), { 
+                            text, attachments, timestamp: ts, isPinned, order 
+                        });
                         added++;
                     } catch (err) { failed++; }
                     showStatus(`⏳ جاري الاستيراد... (${i + 1}/${incoming.length}) — ✅ ${added} • ❌ ${failed}`, 'info');
