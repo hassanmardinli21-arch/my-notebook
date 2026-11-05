@@ -123,7 +123,6 @@
             box-shadow: 0 2px 5px rgba(120, 80, 40, 0.15), inset 0 0 20px rgba(160, 120, 60, 0.05);
             transition: all 0.3s ease;
         }
-        /* تمييز الملاحظة المثبتة */
         .note-card.pinned {
             border: 2px solid #b08d57;
             box-shadow: 0 4px 12px rgba(139, 90, 43, 0.3), inset 0 0 20px rgba(200, 169, 97, 0.2);
@@ -134,7 +133,6 @@
         .pin-indicator { font-size: 16px; margin-left: 5px; }
         .note-text { font-size: 16px; line-height: 1.8; white-space: pre-wrap; word-wrap: break-word; color: var(--ink-dark); margin-bottom: 12px; }
         
-        /* ترتيب الأزرار بشكل شبكي مريح */
         .btn-group { 
             display: grid; 
             grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); 
@@ -232,7 +230,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import {
-            getFirestore, collection, query, orderBy, getDocs,
+            getFirestore, collection, query, getDocs,
             doc, setDoc, updateDoc, deleteDoc
         } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -273,7 +271,6 @@
         let editingAttachments = [];
         let isVisible = false;
         
-        // مصفوفة لحفظ الملاحظات لتمكين الترتيب السريع
         let currentNotes = []; 
 
         toggleBtn.addEventListener('click', () => {
@@ -418,7 +415,6 @@
             selectedFilesEl.appendChild(bar);
         }
 
-        // ========== تحديث قاعدة البيانات لترتيب أو تثبيت الملاحظة ==========
         async function updateNoteOrder(docId, updates) {
             try {
                 showStatus('⏳ جاري تحديث الترتيب...', 'info');
@@ -434,18 +430,30 @@
 
         async function fetchNotes() {
             try {
-                // الترتيب: أولاً المثبتة (isPinned=true)، ثم حسب الترتيب اليدوي (order)، ثم التاريخ
-                const q = query(
-                    collection(db, "notes"), 
-                    orderBy("isPinned", "desc"),
-                    orderBy("order", "asc"),
-                    orderBy("timestamp", "desc")
-                );
+                // 🌟 جلب جميع الملاحظات بدون استخدام query معقد (لتجنب الفهرس)
+                const q = query(collection(db, "notes"));
                 const snap = await getDocs(q);
                 
-                currentNotes = []; // تفريغ المصفوفة
+                currentNotes = []; 
                 snap.forEach(d => {
                     currentNotes.push({ id: d.id, ...d.data() });
+                });
+
+                // 🌟 الترتيب برمجياً داخل المتصفح (المثبتة أولاً، ثم الترتيب اليدوي)
+                currentNotes.sort((a, b) => {
+                    const pinA = a.isPinned ? 1 : 0;
+                    const pinB = b.isPinned ? 1 : 0;
+                    if (pinA !== pinB) return pinB - pinA; // المثبتة (1) تأتي قبل غير المثبتة (0)
+
+                    // إذا كان كلاهما مثبت أو غير مثبت، نرتب حسب order (الأقل أولاً)
+                    const orderA = a.order || 0;
+                    const orderB = b.order || 0;
+                    if (orderA !== orderB) return orderA - orderB;
+
+                    // إذا كان الترتيب متساوياً، نرتب حسب الوقت (الأحدث أولاً)
+                    const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : new Date(a.timestamp || 0).getTime();
+                    const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : new Date(b.timestamp || 0).getTime();
+                    return timeB - timeA;
                 });
 
                 notesContainer.innerHTML = '';
@@ -458,7 +466,6 @@
                     const data = note;
                     const docId = note.id;
                     const isPinned = data.isPinned || false;
-                    const currentOrder = data.order || 0;
 
                     let dateStr = '';
                     try {
@@ -508,7 +515,6 @@
                     const btnGroup = document.createElement('div');
                     btnGroup.className = 'btn-group';
 
-                    // زر التعديل
                     const editBtn = document.createElement('button');
                     editBtn.className = 'action-btn edit-btn';
                     editBtn.innerHTML = '✏️ تعديل';
@@ -526,26 +532,21 @@
                         showStatus('✏️ جارٍ التعديل...', 'info');
                     });
 
-                    // زر التثبيت (Pin)
                     const pinBtn = document.createElement('button');
                     pinBtn.className = `action-btn pin-btn ${isPinned ? 'active' : ''}`;
                     pinBtn.innerHTML = isPinned ? '📌 مثبتة' : '📌 تثبيت';
                     pinBtn.addEventListener('click', async () => {
-                        // عند التثبيت نعطيه رقماً سالباً ليتصدر القائمة
                         const newOrder = isPinned ? 0 : (Date.now() * -1); 
                         await updateNoteOrder(docId, { isPinned: !isPinned, order: newOrder });
                     });
 
-                    // أزرار التحريك اليدوي (رفع / إنزال)
                     const moveUpBtn = document.createElement('button');
                     moveUpBtn.className = 'action-btn move-btn';
                     moveUpBtn.innerHTML = '⬆️ رفع';
                     moveUpBtn.title = 'تقديم الملاحظة للأعلى';
-                    // منع الرفع إذا كانت أول عنصر
                     if (index === 0) moveUpBtn.disabled = true;
                     moveUpBtn.addEventListener('click', async () => {
                         const prevNote = currentNotes[index - 1];
-                        // نأخذ ترتيب السابق وننقص منه 1 لنصبح قبله
                         const prevOrder = prevNote.order || 0;
                         await updateNoteOrder(docId, { order: prevOrder - 1, isPinned: prevNote.isPinned });
                     });
@@ -554,16 +555,13 @@
                     moveDownBtn.className = 'action-btn move-btn';
                     moveDownBtn.innerHTML = '⬇️ إنزال';
                     moveDownBtn.title = 'تأخير الملاحظة للأسفل';
-                    // منع الإنزال إذا كانت آخر عنصر
                     if (index === currentNotes.length - 1) moveDownBtn.disabled = true;
                     moveDownBtn.addEventListener('click', async () => {
                         const nextNote = currentNotes[index + 1];
-                        // نأخذ ترتيب التالي ونزيد عليه 1 لنصبح بعده
                         const nextOrder = nextNote.order || 0;
                         await updateNoteOrder(docId, { order: nextOrder + 1, isPinned: nextNote.isPinned });
                     });
 
-                    // زر النسخ
                     const copyBtn = document.createElement('button');
                     copyBtn.className = 'action-btn copy-btn';
                     copyBtn.innerHTML = '📋 نسخ';
@@ -582,7 +580,6 @@
                         }
                     });
 
-                    // زر الحذف
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'action-btn delete-btn';
                     deleteBtn.innerHTML = '🗑️ حذف';
@@ -599,7 +596,6 @@
                         }
                     });
 
-                    // إضافة الأزرار للبطاقة
                     btnGroup.appendChild(editBtn);
                     btnGroup.appendChild(pinBtn);
                     btnGroup.appendChild(moveUpBtn);
@@ -660,13 +656,12 @@
                     }
                     showStatus('⏳ جاري حفظ الملاحظة...', 'info');
                     
-                    // إعطاء الملاحظة الجديدة ترتيباً أولياً (رقم موجب كبير لتكون بالأسفل)
                     await setDoc(doc(collection(db, "notes")), {
                         text: noteText, 
                         attachments: selectedFiles, 
                         timestamp: new Date(),
                         isPinned: false,
-                        order: Date.now() // نستخدم الوقت كرقم تسلسلي
+                        order: Date.now() 
                     });
                     
                     showStatus('✅ تم الحفظ بنجاح!', 'ok');
@@ -721,7 +716,7 @@
                 exportBtn.disabled = true;
                 showStatus('⏳ جاري تجهيز النسخة الاحتياطية...', 'info');
 
-                const q = query(collection(db, "notes"), orderBy("timestamp", "desc"));
+                const q = query(collection(db, "notes"));
                 const snap = await getDocs(q);
                 const notes = [];
 
@@ -797,7 +792,6 @@
                         let ts = new Date();
                         if (n.timestamp) { const d = new Date(n.timestamp); if (!isNaN(d.getTime())) ts = d; }
                         
-                        // استيراد الترتيب والتثبيت إذا وجد
                         const isPinned = n.isPinned || false;
                         const order = n.order || Date.now() + i;
 
