@@ -29,6 +29,7 @@
             color: var(--ink-dark);
             padding: 20px;
             min-height: 100vh;
+            padding-bottom: 100px; /* مساحة للشريط العائم */
         }
         .container {
             max-width: 800px;
@@ -185,46 +186,46 @@
         .note-attachment-image:hover { transform: scale(1.01); }
         .note-attachment-audio { width: 100%; border-radius: 6px; filter: sepia(30%) contrast(95%); }
 
-        /* أزرار التحكم العائمة */
-        .floating-controls-left {
+        /* 🟢 الشريط العائم السفلي الموحد 🟢 */
+        .floating-toolbar {
             position: fixed;
             bottom: 20px;
-            left: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 9999; /* لضمان ظهورها فوق أي شيء */
-        }
-        .floating-controls-right {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 9999; /* لضمان ظهورها فوق أي شيء */
-        }
-        .float-btn {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            background: rgba(93, 74, 53, 0.9);
-            color: #f4e4bc;
+            gap: 12px;
+            background: rgba(62, 44, 28, 0.95);
+            padding: 10px 20px;
+            border-radius: 40px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
             border: 2px solid #c9a961;
+            z-index: 99999; /* أعلى طبقة لضمان الظهور */
+        }
+        .toolbar-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: #f4e4bc;
+            color: #3e2c1c;
+            border: none;
             font-size: 20px;
             cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
             transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-        .float-btn:hover {
-            background: rgba(122, 99, 68, 1);
+        .toolbar-btn:hover {
+            background: #fff;
             transform: scale(1.1);
         }
-        .float-btn.note-nav {
-            background: rgba(139, 90, 43, 0.9);
+        .toolbar-btn.note-nav {
+            background: #8b5a2b;
+            color: #fff;
+        }
+        .toolbar-btn.note-nav:hover {
+            background: #a06b3a;
         }
     </style>
 </head>
@@ -270,16 +271,12 @@
         </div>
     </div>
 
-    <!-- أزرار التمرير (يسار) -->
-    <div class="floating-controls-left">
-        <button class="float-btn" id="scrollTopBtn" title="أعلى الصفحة">⬆️</button>
-        <button class="float-btn" id="scrollBottomBtn" title="أسفل الصفحة">⬇️</button>
-    </div>
-
-    <!-- أزرار التنقل بين الملاحظات (يمين) -->
-    <div class="floating-controls-right">
-        <button class="float-btn note-nav" id="goToFirstBtn" title="أول ملاحظة">🔝</button>
-        <button class="float-btn note-nav" id="goToLastBtn" title="آخر ملاحظة">🔚</button>
+    <!-- 🟢 الشريط العائم الموحد 🟢 -->
+    <div class="floating-toolbar">
+        <button class="toolbar-btn" id="scrollTopBtn" title="أعلى الصفحة">⬆️</button>
+        <button class="toolbar-btn note-nav" id="goToFirstBtn" title="أول ملاحظة">🔝</button>
+        <button class="toolbar-btn note-nav" id="goToLastBtn" title="آخر ملاحظة">🔚</button>
+        <button class="toolbar-btn" id="scrollBottomBtn" title="أسفل الصفحة">⬇️</button>
     </div>
 
     <script type="module">
@@ -321,7 +318,7 @@
         const importBtn = document.getElementById('importBtn');
         const importInput = document.getElementById('importInput');
         
-        // أزرار التحكم
+        // الأزرار العائمة
         const goToFirstBtn = document.getElementById('goToFirstBtn');
         const goToLastBtn = document.getElementById('goToLastBtn');
 
@@ -332,15 +329,11 @@
         
         let currentNotes = []; 
 
-        // أحداث أزرار التمرير العامة
-        document.getElementById('scrollTopBtn').addEventListener('click', () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-        document.getElementById('scrollBottomBtn').addEventListener('click', () => {
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        });
+        // أحداث التمرير
+        document.getElementById('scrollTopBtn').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        document.getElementById('scrollBottomBtn').addEventListener('click', () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
 
-        // أحداث أزرار التنقل بين الملاحظات
+        // أحداث التنقل بين الملاحظات
         goToFirstBtn.addEventListener('click', () => {
             if (currentNotes.length > 0) {
                 notesContainer.firstElementChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
