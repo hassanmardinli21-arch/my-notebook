@@ -105,6 +105,31 @@
         .import-btn { background: #dfe8d0; color: #4a6b32; border-color: #a8bf8a; }
         .import-btn:hover:not(:disabled) { background: #cfdcc0; transform: translateY(-2px); }
 
+        /* أزرار التنقل السريع */
+        .nav-buttons-box {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+        .nav-btn {
+            flex: 1;
+            padding: 10px;
+            border-radius: 6px;
+            border: 2px solid var(--paper-border);
+            background: #f0e6cc;
+            color: var(--ink-dark);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: 'Georgia', 'Amiri', serif;
+            transition: all 0.2s;
+        }
+        .nav-btn:hover {
+            background: #e6d8b5;
+            transform: translateY(-2px);
+        }
+
         .toggle-index-btn {
             background: linear-gradient(145deg, #5c4530, #3e2c1c); color: #f4e4bc;
             border: 1px solid #2a1e12; padding: 10px 18px; border-radius: 6px;
@@ -122,6 +147,7 @@
             border: 1px solid var(--paper-border); border-radius: 4px; padding: 18px;
             box-shadow: 0 2px 5px rgba(120, 80, 40, 0.15), inset 0 0 20px rgba(160, 120, 60, 0.05);
             transition: all 0.3s ease;
+            scroll-margin-top: 20px; /* مسافة أمان عند التمرير للبطاقة */
         }
         .note-card.pinned {
             border: 2px solid #b08d57;
@@ -183,36 +209,6 @@
         .note-attachment-image { max-width: 100%; max-height: 300px; border-radius: 4px; border: 3px solid var(--paper-card); box-shadow: 0 2px 8px rgba(120, 80, 40, 0.3), 0 0 0 1px var(--paper-border); cursor: pointer; }
         .note-attachment-image:hover { transform: scale(1.01); }
         .note-attachment-audio { width: 100%; border-radius: 6px; filter: sepia(30%) contrast(95%); }
-
-        /* أزرار العودة للأعلى والأسفل (عائمة) */
-        .scroll-buttons {
-            position: fixed;
-            bottom: 20px;
-            left: 20px; /* في الجهة اليسرى لأن الاتجاه RTL */
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            z-index: 1000;
-        }
-        .scroll-btn {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: rgba(93, 74, 53, 0.9);
-            color: #f4e4bc;
-            border: 1px solid #2a1e12;
-            font-size: 20px;
-            cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .scroll-btn:hover {
-            background: rgba(122, 99, 68, 1);
-            transform: scale(1.1);
-        }
     </style>
 </head>
 <body>
@@ -252,15 +248,15 @@
 
         <button class="toggle-index-btn" id="toggleIndexBtn">📂 إظهار الفهرس</button>
 
+        <!-- أزرار الانتقال السريع لأول وآخر ملاحظة -->
+        <div class="nav-buttons-box" id="navButtons" style="display: none;">
+            <button type="button" class="nav-btn" id="goToFirstBtn">⬆️ أول ملاحظة</button>
+            <button type="button" class="nav-btn" id="goToLastBtn">⬇️ آخر ملاحظة</button>
+        </div>
+
         <div class="notes-list" id="notesList">
             <div id="notesContainer">⏳ جاري تحميل الملاحظات...</div>
         </div>
-    </div>
-
-    <!-- أزرار العودة للأعلى والأسفل -->
-    <div class="scroll-buttons">
-        <button class="scroll-btn" id="scrollTopBtn" title="الذهاب إلى الأعلى">⬆️</button>
-        <button class="scroll-btn" id="scrollBottomBtn" title="الذهاب إلى الأسفل">⬇️</button>
     </div>
 
     <script type="module">
@@ -301,6 +297,11 @@
         const exportBtn = document.getElementById('exportBtn');
         const importBtn = document.getElementById('importBtn');
         const importInput = document.getElementById('importInput');
+        
+        // أزرار التنقل
+        const navButtons = document.getElementById('navButtons');
+        const goToFirstBtn = document.getElementById('goToFirstBtn');
+        const goToLastBtn = document.getElementById('goToLastBtn');
 
         let editingDocId = null;
         let selectedFiles = [];
@@ -309,19 +310,26 @@
         
         let currentNotes = []; 
 
-        // أزرار التمرير
-        document.getElementById('scrollTopBtn').addEventListener('click', () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-
-        document.getElementById('scrollBottomBtn').addEventListener('click', () => {
-            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
-        });
-
         toggleBtn.addEventListener('click', () => {
             isVisible = !isVisible;
             notesList.classList.toggle('visible', isVisible);
             toggleBtn.textContent = isVisible ? '📂 إخفاء الفهرس' : '📂 إظهار الفهرس';
+            
+            // إظهار أو إخفاء أزرار التنقل
+            navButtons.style.display = isVisible ? 'flex' : 'none';
+        });
+
+        // أحداث أزرار التنقل
+        goToFirstBtn.addEventListener('click', () => {
+            if (currentNotes.length > 0) {
+                notesContainer.firstElementChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        });
+
+        goToLastBtn.addEventListener('click', () => {
+            if (currentNotes.length > 0) {
+                notesContainer.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
         });
 
         function setButtonColor(color) {
@@ -705,7 +713,6 @@
                     }
                     showStatus('⏳ جاري حفظ الملاحظة...', 'info');
                     
-                    // حفظ الملاحظة الجديدة (ستأخذ order = الوقت الحالي، مما يجعلها تظهر بالأعلى)
                     await setDoc(doc(collection(db, "notes")), {
                         text: noteText, 
                         attachments: selectedFiles, 
@@ -854,7 +861,12 @@
                 }
 
                 await fetchNotes();
-                if (added > 0 && !isVisible) { isVisible = true; notesList.classList.add('visible'); toggleBtn.textContent = '📂 إخفاء الفهرس'; }
+                if (added > 0 && !isVisible) { 
+                    isVisible = true; 
+                    notesList.classList.add('visible'); 
+                    toggleBtn.textContent = '📂 إخفاء الفهرس'; 
+                    navButtons.style.display = 'flex';
+                }
                 
                 showStatus(`✅ تم الاستيراد: ${added} ملاحظة جديدة` + (failed ? ` • فشل ${failed}` : ''), failed > 0 ? 'info' : 'ok');
                 setTimeout(() => showStatus(''), 7000);
