@@ -461,7 +461,6 @@
                 currentNotes.forEach((note, index) => {
                     const data = note;
                     const docId = note.id;
-                    // تأمين القيم الافتراضية لمنع خطأ undefined
                     const isPinned = data.isPinned || false;
 
                     let dateStr = '';
@@ -634,13 +633,14 @@
                     }
                     showStatus('⏳ جاري تحديث الملاحظة...', 'info');
                     
-                    // تحديث آمن يمنع خطأ undefined
+                    // التحديث الآمن الذي يحافظ على التثبيت
+                    const existingNote = currentNotes.find(n => n.id === editingDocId);
                     await updateDoc(doc(db, "notes", editingDocId), {
                         text: noteText, 
                         attachments: allAtt, 
                         timestamp: new Date(),
-                        isPinned: false,
-                        order: Date.now()
+                        isPinned: existingNote ? existingNote.isPinned : false,
+                        order: existingNote ? (existingNote.order || 0) : Date.now()
                     });
 
                     showStatus('✅ تم تحديث الملاحظة بنجاح!', 'ok');
