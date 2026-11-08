@@ -193,7 +193,7 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            z-index: 1000;
+            z-index: 9999; /* لضمان ظهورها فوق أي شيء */
         }
         .floating-controls-right {
             position: fixed;
@@ -202,7 +202,7 @@
             display: flex;
             flex-direction: column;
             gap: 10px;
-            z-index: 1000;
+            z-index: 9999; /* لضمان ظهورها فوق أي شيء */
         }
         .float-btn {
             width: 48px;
@@ -277,7 +277,7 @@
     </div>
 
     <!-- أزرار التنقل بين الملاحظات (يمين) -->
-    <div class="floating-controls-right" id="noteNavBtns" style="display: none;">
+    <div class="floating-controls-right">
         <button class="float-btn note-nav" id="goToFirstBtn" title="أول ملاحظة">🔝</button>
         <button class="float-btn note-nav" id="goToLastBtn" title="آخر ملاحظة">🔚</button>
     </div>
@@ -322,7 +322,6 @@
         const importInput = document.getElementById('importInput');
         
         // أزرار التحكم
-        const noteNavBtns = document.getElementById('noteNavBtns');
         const goToFirstBtn = document.getElementById('goToFirstBtn');
         const goToLastBtn = document.getElementById('goToLastBtn');
 
@@ -345,12 +344,18 @@
         goToFirstBtn.addEventListener('click', () => {
             if (currentNotes.length > 0) {
                 notesContainer.firstElementChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                showStatus('⚠️ لا توجد ملاحظات بعد!', 'err');
+                setTimeout(() => showStatus(''), 2000);
             }
         });
 
         goToLastBtn.addEventListener('click', () => {
             if (currentNotes.length > 0) {
                 notesContainer.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            } else {
+                showStatus('⚠️ لا توجد ملاحظات بعد!', 'err');
+                setTimeout(() => showStatus(''), 2000);
             }
         });
 
@@ -358,18 +363,7 @@
             isVisible = !isVisible;
             notesList.classList.toggle('visible', isVisible);
             toggleBtn.textContent = isVisible ? '📂 إخفاء الفهرس' : '📂 إظهار الفهرس';
-            
-            // إظهار/إخفاء أزرار التنقل بناءً على حالة الفهرس ووجود ملاحظات
-            updateNavButtonsVisibility();
         });
-
-        function updateNavButtonsVisibility() {
-            if (isVisible && currentNotes.length > 0) {
-                noteNavBtns.style.display = 'flex';
-            } else {
-                noteNavBtns.style.display = 'none';
-            }
-        }
 
         function setButtonColor(color) {
             saveBtn.classList.remove('text-red', 'text-green');
@@ -530,7 +524,6 @@
                     currentNotes.push({ id: d.id, ...d.data() });
                 });
 
-                // الترتيب: المثبتة أولاً، ثم حسب الترتيب اليدوي، ثم الأحدث
                 currentNotes.sort((a, b) => {
                     const pinA = a.isPinned ? 1 : 0;
                     const pinB = b.isPinned ? 1 : 0;
@@ -542,14 +535,11 @@
 
                     const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : new Date(a.timestamp || 0).getTime();
                     const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : new Date(b.timestamp || 0).getTime();
-                    return timeB - timeA; // الأحدث أولاً
+                    return timeB - timeA;
                 });
 
                 notesContainer.innerHTML = '';
                 
-                // تحديث ظهور أزرار التنقل
-                updateNavButtonsVisibility();
-
                 if (currentNotes.length === 0) {
                     notesContainer.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:20px;">لا توجد ملاحظات بعد</p>';
                     return;
@@ -909,7 +899,6 @@
                     notesList.classList.add('visible'); 
                     toggleBtn.textContent = '📂 إخفاء الفهرس'; 
                 }
-                updateNavButtonsVisibility();
                 
                 showStatus(`✅ تم الاستيراد: ${added} ملاحظة جديدة` + (failed ? ` • فشل ${failed}` : ''), failed > 0 ? 'info' : 'ok');
                 setTimeout(() => showStatus(''), 7000);
