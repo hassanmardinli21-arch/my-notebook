@@ -29,7 +29,7 @@
             color: var(--ink-dark);
             padding: 20px;
             min-height: 100vh;
-            padding-bottom: 100px; /* مساحة للشريط العائم */
+            padding-bottom: 100px;
         }
         .container {
             max-width: 800px;
@@ -186,7 +186,7 @@
         .note-attachment-image:hover { transform: scale(1.01); }
         .note-attachment-audio { width: 100%; border-radius: 6px; filter: sepia(30%) contrast(95%); }
 
-        /* 🟢 الشريط العائم السفلي الموحد 🟢 */
+        /* الشريط العائم الموحد */
         .floating-toolbar {
             position: fixed;
             bottom: 20px;
@@ -199,7 +199,7 @@
             border-radius: 40px;
             box-shadow: 0 8px 25px rgba(0,0,0,0.5);
             border: 2px solid #c9a961;
-            z-index: 99999; /* أعلى طبقة لضمان الظهور */
+            z-index: 99999;
         }
         .toolbar-btn {
             width: 45px;
@@ -216,17 +216,9 @@
             justify-content: center;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
-        .toolbar-btn:hover {
-            background: #fff;
-            transform: scale(1.1);
-        }
-        .toolbar-btn.note-nav {
-            background: #8b5a2b;
-            color: #fff;
-        }
-        .toolbar-btn.note-nav:hover {
-            background: #a06b3a;
-        }
+        .toolbar-btn:hover { background: #fff; transform: scale(1.1); }
+        .toolbar-btn.note-nav { background: #8b5a2b; color: #fff; }
+        .toolbar-btn.note-nav:hover { background: #a06b3a; }
     </style>
 </head>
 <body>
@@ -271,7 +263,7 @@
         </div>
     </div>
 
-    <!-- 🟢 الشريط العائم الموحد 🟢 -->
+    <!-- الشريط العائم -->
     <div class="floating-toolbar">
         <button class="toolbar-btn" id="scrollTopBtn" title="أعلى الصفحة">⬆️</button>
         <button class="toolbar-btn note-nav" id="goToFirstBtn" title="أول ملاحظة">🔝</button>
@@ -318,7 +310,6 @@
         const importBtn = document.getElementById('importBtn');
         const importInput = document.getElementById('importInput');
         
-        // الأزرار العائمة
         const goToFirstBtn = document.getElementById('goToFirstBtn');
         const goToLastBtn = document.getElementById('goToLastBtn');
 
@@ -329,11 +320,9 @@
         
         let currentNotes = []; 
 
-        // أحداث التمرير
         document.getElementById('scrollTopBtn').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
         document.getElementById('scrollBottomBtn').addEventListener('click', () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
 
-        // أحداث التنقل بين الملاحظات
         goToFirstBtn.addEventListener('click', () => {
             if (currentNotes.length > 0) {
                 notesContainer.firstElementChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -878,11 +867,21 @@
                         const isPinned = n.isPinned || false;
                         const order = n.order || Date.now() + i;
 
-                        await setDoc(doc(collection(db, "notes")), { 
-                            text, attachments, timestamp: ts, isPinned, order 
-                        });
+                        // 🔥 هنا السر: تنظيف أي undefined قبل الحفظ 🔥
+                        const cleanNote = {
+                            text: text,
+                            attachments: attachments,
+                            timestamp: ts,
+                            isPinned: isPinned === true ? true : false,
+                            order: order || Date.now()
+                        };
+
+                        await setDoc(doc(collection(db, "notes")), cleanNote);
                         added++;
-                    } catch (err) { failed++; }
+                    } catch (err) { 
+                        console.error("فشل في حفظ ملاحظة:", err);
+                        failed++; 
+                    }
                     showStatus(`⏳ جاري الاستيراد... (${i + 1}/${incoming.length}) — ✅ ${added} • ❌ ${failed}`, 'info');
                 }
 
