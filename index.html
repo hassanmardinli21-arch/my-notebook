@@ -183,6 +183,36 @@
         .note-attachment-image { max-width: 100%; max-height: 300px; border-radius: 4px; border: 3px solid var(--paper-card); box-shadow: 0 2px 8px rgba(120, 80, 40, 0.3), 0 0 0 1px var(--paper-border); cursor: pointer; }
         .note-attachment-image:hover { transform: scale(1.01); }
         .note-attachment-audio { width: 100%; border-radius: 6px; filter: sepia(30%) contrast(95%); }
+
+        /* أزرار العودة للأعلى والأسفل (عائمة) */
+        .scroll-buttons {
+            position: fixed;
+            bottom: 20px;
+            left: 20px; /* في الجهة اليسرى لأن الاتجاه RTL */
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+        .scroll-btn {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: rgba(93, 74, 53, 0.9);
+            color: #f4e4bc;
+            border: 1px solid #2a1e12;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .scroll-btn:hover {
+            background: rgba(122, 99, 68, 1);
+            transform: scale(1.1);
+        }
     </style>
 </head>
 <body>
@@ -225,6 +255,12 @@
         <div class="notes-list" id="notesList">
             <div id="notesContainer">⏳ جاري تحميل الملاحظات...</div>
         </div>
+    </div>
+
+    <!-- أزرار العودة للأعلى والأسفل -->
+    <div class="scroll-buttons">
+        <button class="scroll-btn" id="scrollTopBtn" title="الذهاب إلى الأعلى">⬆️</button>
+        <button class="scroll-btn" id="scrollBottomBtn" title="الذهاب إلى الأسفل">⬇️</button>
     </div>
 
     <script type="module">
@@ -272,6 +308,15 @@
         let isVisible = false;
         
         let currentNotes = []; 
+
+        // أزرار التمرير
+        document.getElementById('scrollTopBtn').addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        document.getElementById('scrollBottomBtn').addEventListener('click', () => {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+        });
 
         toggleBtn.addEventListener('click', () => {
             isVisible = !isVisible;
@@ -438,6 +483,7 @@
                     currentNotes.push({ id: d.id, ...d.data() });
                 });
 
+                // الترتيب: المثبتة أولاً، ثم حسب الترتيب اليدوي، ثم الأحدث
                 currentNotes.sort((a, b) => {
                     const pinA = a.isPinned ? 1 : 0;
                     const pinB = b.isPinned ? 1 : 0;
@@ -449,7 +495,7 @@
 
                     const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : new Date(a.timestamp || 0).getTime();
                     const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : new Date(b.timestamp || 0).getTime();
-                    return timeB - timeA;
+                    return timeB - timeA; // الأحدث أولاً
                 });
 
                 notesContainer.innerHTML = '';
@@ -633,7 +679,6 @@
                     }
                     showStatus('⏳ جاري تحديث الملاحظة...', 'info');
                     
-                    // التحديث الآمن الذي يحافظ على التثبيت
                     const existingNote = currentNotes.find(n => n.id === editingDocId);
                     await updateDoc(doc(db, "notes", editingDocId), {
                         text: noteText, 
@@ -660,6 +705,7 @@
                     }
                     showStatus('⏳ جاري حفظ الملاحظة...', 'info');
                     
+                    // حفظ الملاحظة الجديدة (ستأخذ order = الوقت الحالي، مما يجعلها تظهر بالأعلى)
                     await setDoc(doc(collection(db, "notes")), {
                         text: noteText, 
                         attachments: selectedFiles, 
