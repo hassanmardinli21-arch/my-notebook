@@ -185,52 +185,46 @@
         .note-attachment-image:hover { transform: scale(1.01); }
         .note-attachment-audio { width: 100%; border-radius: 6px; filter: sepia(30%) contrast(95%); }
 
-        /* أزرار العودة لأول وآخر ملاحظة (عائمة) */
-        .floating-nav-buttons {
+        /* أزرار التحكم العائمة */
+        .floating-controls-left {
             position: fixed;
-            bottom: 80px; /* فوق أزرار التمرير */
-            right: 20px; /* في الجهة اليمنى */
-            display: none; /* تظهر برمجياً عند وجود ملاحظات */
+            bottom: 20px;
+            left: 20px;
+            display: flex;
             flex-direction: column;
             gap: 10px;
             z-index: 1000;
         }
-        .floating-nav-btn {
-            width: 50px;
-            height: 50px;
+        .floating-controls-right {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+        .float-btn {
+            width: 48px;
+            height: 48px;
             border-radius: 50%;
-            background: rgba(139, 90, 43, 0.9); /* لون بني */
+            background: rgba(93, 74, 53, 0.9);
             color: #f4e4bc;
             border: 2px solid #c9a961;
             font-size: 20px;
             cursor: pointer;
             box-shadow: 0 4px 10px rgba(0,0,0,0.4);
-            transition: all 0.3s ease;
+            transition: all 0.2s ease;
             display: flex;
             align-items: center;
             justify-content: center;
-            text-decoration: none;
         }
-        .floating-nav-btn:hover {
-            background: rgba(160, 107, 58, 1);
+        .float-btn:hover {
+            background: rgba(122, 99, 68, 1);
             transform: scale(1.1);
         }
-        .floating-nav-btn[title]::after {
-            content: attr(title);
-            position: absolute;
-            right: 60px;
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 4px 8px;
-            border-radius: 4px;
-            font-size: 12px;
-            white-space: nowrap;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-        .floating-nav-btn:hover::after {
-            opacity: 1;
+        .float-btn.note-nav {
+            background: rgba(139, 90, 43, 0.9);
         }
     </style>
 </head>
@@ -276,10 +270,16 @@
         </div>
     </div>
 
-    <!-- الأزرار العائمة للانتقال لأول وآخر ملاحظة -->
-    <div class="floating-nav-buttons" id="floatingNav">
-        <button class="floating-nav-btn" id="goToFirstBtn" title="أول ملاحظة">⬆️</button>
-        <button class="floating-nav-btn" id="goToLastBtn" title="آخر ملاحظة">⬇️</button>
+    <!-- أزرار التمرير (يسار) -->
+    <div class="floating-controls-left">
+        <button class="float-btn" id="scrollTopBtn" title="أعلى الصفحة">⬆️</button>
+        <button class="float-btn" id="scrollBottomBtn" title="أسفل الصفحة">⬇️</button>
+    </div>
+
+    <!-- أزرار التنقل بين الملاحظات (يمين) -->
+    <div class="floating-controls-right" id="noteNavBtns" style="display: none;">
+        <button class="float-btn note-nav" id="goToFirstBtn" title="أول ملاحظة">🔝</button>
+        <button class="float-btn note-nav" id="goToLastBtn" title="آخر ملاحظة">🔚</button>
     </div>
 
     <script type="module">
@@ -321,8 +321,8 @@
         const importBtn = document.getElementById('importBtn');
         const importInput = document.getElementById('importInput');
         
-        // الأزرار العائمة
-        const floatingNav = document.getElementById('floatingNav');
+        // أزرار التحكم
+        const noteNavBtns = document.getElementById('noteNavBtns');
         const goToFirstBtn = document.getElementById('goToFirstBtn');
         const goToLastBtn = document.getElementById('goToLastBtn');
 
@@ -333,13 +333,15 @@
         
         let currentNotes = []; 
 
-        toggleBtn.addEventListener('click', () => {
-            isVisible = !isVisible;
-            notesList.classList.toggle('visible', isVisible);
-            toggleBtn.textContent = isVisible ? '📂 إخفاء الفهرس' : '📂 إظهار الفهرس';
+        // أحداث أزرار التمرير العامة
+        document.getElementById('scrollTopBtn').addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        document.getElementById('scrollBottomBtn').addEventListener('click', () => {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
         });
 
-        // أحداث أزرار التنقل العائمة
+        // أحداث أزرار التنقل بين الملاحظات
         goToFirstBtn.addEventListener('click', () => {
             if (currentNotes.length > 0) {
                 notesContainer.firstElementChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -351,6 +353,23 @@
                 notesContainer.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
         });
+
+        toggleBtn.addEventListener('click', () => {
+            isVisible = !isVisible;
+            notesList.classList.toggle('visible', isVisible);
+            toggleBtn.textContent = isVisible ? '📂 إخفاء الفهرس' : '📂 إظهار الفهرس';
+            
+            // إظهار/إخفاء أزرار التنقل بناءً على حالة الفهرس ووجود ملاحظات
+            updateNavButtonsVisibility();
+        });
+
+        function updateNavButtonsVisibility() {
+            if (isVisible && currentNotes.length > 0) {
+                noteNavBtns.style.display = 'flex';
+            } else {
+                noteNavBtns.style.display = 'none';
+            }
+        }
 
         function setButtonColor(color) {
             saveBtn.classList.remove('text-red', 'text-green');
@@ -528,12 +547,8 @@
 
                 notesContainer.innerHTML = '';
                 
-                // إظهار الأزرار العائمة إذا كانت هناك ملاحظات
-                if (currentNotes.length > 0 && isVisible) {
-                    floatingNav.style.display = 'flex';
-                } else {
-                    floatingNav.style.display = 'none';
-                }
+                // تحديث ظهور أزرار التنقل
+                updateNavButtonsVisibility();
 
                 if (currentNotes.length === 0) {
                     notesContainer.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:20px;">لا توجد ملاحظات بعد</p>';
@@ -893,8 +908,8 @@
                     isVisible = true; 
                     notesList.classList.add('visible'); 
                     toggleBtn.textContent = '📂 إخفاء الفهرس'; 
-                    floatingNav.style.display = 'flex';
                 }
+                updateNavButtonsVisibility();
                 
                 showStatus(`✅ تم الاستيراد: ${added} ملاحظة جديدة` + (failed ? ` • فشل ${failed}` : ''), failed > 0 ? 'info' : 'ok');
                 setTimeout(() => showStatus(''), 7000);
