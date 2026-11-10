@@ -33,12 +33,12 @@
     .note-title-input { font-size: 15px; font-weight: bold; color: var(--primary); border: none; background: transparent; width: 70%; outline: none; border-bottom: 1px solid transparent; }
     .note-title-input:focus { border-bottom: 1px solid var(--primary); }
     
-    /* ✅ الرقم الذهبي المميز */
-    .note-number { 
+    /* 🔥 التصميم الجديد للرقم الذهبي 🔥 */
+    .gold-number { 
         font-size: 18px; 
         font-weight: bold; 
         color: #ffffff; 
-        background: #d4af37; 
+        background: #d4af37; /* لون الذهب */
         padding: 2px 12px; 
         border-radius: 50%; 
         border: 2px solid #8b5a2b; 
@@ -132,7 +132,7 @@
             <div class="note-card ${n.isPinned ? 'pinned' : ''}" id="note_${n.id}">
                 <div class="note-header">
                     <input type="text" class="note-title-input" value="${title}" onchange="window.updateTitle('${n.id}', this.value)" placeholder="اسم الملاحظة...">
-                    <span class="note-number">${num}</span>
+                    <span class="gold-number">${num}</span>
                 </div>
                 <div class="note-text">${n.text || ''}</div>
                 <div class="btn-group">
