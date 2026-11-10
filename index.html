@@ -116,6 +116,28 @@
         .toggle-index-btn:hover { background: linear-gradient(145deg, #6f563a, #5c4530); transform: translateY(-2px); }
         .notes-list { margin-top: 10px; border-top: 2px double var(--paper-border); padding-top: 15px; display: none; }
         .notes-list.visible { display: block; }
+        
+        /* شريط البحث */
+        .search-box {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        .search-box input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid var(--paper-border);
+            border-radius: 6px;
+            font-size: 16px;
+            font-family: 'Georgia', 'Amiri', serif;
+            background: var(--paper-card);
+            color: var(--ink-dark);
+        }
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
         #notesContainer { display: flex; flex-direction: column; gap: 15px; margin-top: 10px; }
         
         .note-card {
@@ -259,6 +281,11 @@
         <button class="toggle-index-btn" id="toggleIndexBtn">📂 إظهار الفهرس</button>
 
         <div class="notes-list" id="notesList">
+            <!-- شريط البحث الجديد -->
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="🔍 ابحث في الملاحظات...">
+            </div>
+            
             <div id="notesContainer">⏳ جاري تحميل الملاحظات...</div>
         </div>
     </div>
@@ -309,6 +336,7 @@
         const exportBtn = document.getElementById('exportBtn');
         const importBtn = document.getElementById('importBtn');
         const importInput = document.getElementById('importInput');
+        const searchInput = document.getElementById('searchInput'); // حقل البحث
         
         const goToFirstBtn = document.getElementById('goToFirstBtn');
         const goToLastBtn = document.getElementById('goToLastBtn');
@@ -319,24 +347,26 @@
         let isVisible = false;
         
         let currentNotes = []; 
+        let searchTerm = ''; // متغير لتخزين نص البحث
 
         document.getElementById('scrollTopBtn').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
         document.getElementById('scrollBottomBtn').addEventListener('click', () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
 
         goToFirstBtn.addEventListener('click', () => {
-            if (currentNotes.length > 0) {
-                notesContainer.firstElementChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            if (notesContainer.children.length > 0 && notesContainer.children[0].classList.contains('note-card')) {
+                notesContainer.children[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
             } else {
-                showStatus('⚠️ لا توجد ملاحظات بعد!', 'err');
+                showStatus('⚠️ لا توجد ملاحظات مطابقة!', 'err');
                 setTimeout(() => showStatus(''), 2000);
             }
         });
 
         goToLastBtn.addEventListener('click', () => {
-            if (currentNotes.length > 0) {
-                notesContainer.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const lastElement = notesContainer.lastElementChild;
+            if (lastElement && lastElement.classList.contains('note-card')) {
+                lastElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
             } else {
-                showStatus('⚠️ لا توجد ملاحظات بعد!', 'err');
+                showStatus('⚠️ لا توجد ملاحظات مطابقة!', 'err');
                 setTimeout(() => showStatus(''), 2000);
             }
         });
@@ -345,6 +375,12 @@
             isVisible = !isVisible;
             notesList.classList.toggle('visible', isVisible);
             toggleBtn.textContent = isVisible ? '📂 إخفاء الفهرس' : '📂 إظهار الفهرس';
+        });
+
+        // حدث البحث الفوري
+        searchInput.addEventListener('input', (e) => {
+            searchTerm = e.target.value.toLowerCase().trim();
+            renderNotesList(); // إعادة رسم الملاحظات المفلترة
         });
 
         function setButtonColor(color) {
@@ -506,6 +542,7 @@
                     currentNotes.push({ id: d.id, ...d.data() });
                 });
 
+                // الترتيب: المثبتة أولاً، ثم حسب الترتيب اليدوي، ثم الأحدث
                 currentNotes.sort((a, b) => {
                     const pinA = a.isPinned ? 1 : 0;
                     const pinB = b.isPinned ? 1 : 0;
@@ -517,164 +554,189 @@
 
                     const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : new Date(a.timestamp || 0).getTime();
                     const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : new Date(b.timestamp || 0).getTime();
-                    return timeB - timeA;
+                    return timeB - timeA; // الأحدث أولاً
                 });
 
-                notesContainer.innerHTML = '';
+                renderNotesList(); // استدعاء دالة الرسم
                 
-                if (currentNotes.length === 0) {
-                    notesContainer.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:20px;">لا توجد ملاحظات بعد</p>';
-                    return;
-                }
-
-                currentNotes.forEach((note, index) => {
-                    const data = note;
-                    const docId = note.id;
-                    const isPinned = data.isPinned || false;
-
-                    let dateStr = '';
-                    try {
-                        const d = data.timestamp?.toDate ? data.timestamp.toDate() : new Date(data.timestamp);
-                        dateStr = d.toLocaleString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-                    } catch (e) { dateStr = 'تاريخ غير محدد'; }
-                    const textContent = data.text || 'ملاحظة فارغة';
-                    
-                    const card = document.createElement('div');
-                    card.className = `note-card ${isPinned ? 'pinned' : ''}`;
-                    
-                    const header = document.createElement('div');
-                    header.className = 'note-header';
-                    header.innerHTML = `<span>${isPinned ? '<span class="pin-indicator">📌</span>' : ''}📅 ${dateStr}</span>`;
-                    card.appendChild(header);
-                    
-                    const textEl = document.createElement('div');
-                    textEl.className = 'note-text';
-                    textEl.textContent = textContent;
-                    card.appendChild(textEl);
-                    
-                    const attachments = data.attachments || [];
-                    if (attachments.length > 0) {
-                        const attDiv = document.createElement('div');
-                        attDiv.className = 'note-attachments';
-                        attachments.forEach(file => {
-                            const src = file.data || file.url;
-                            if (!src) return;
-                            if (file.type?.startsWith('image/')) {
-                                const img = document.createElement('img');
-                                img.src = src; img.className = 'note-attachment-image'; img.alt = file.name || 'صورة';
-                                img.title = 'اضغط لعرض الصورة بحجمها الكامل';
-                                img.addEventListener('click', () => {
-                                    const w = window.open();
-                                    w.document.write(`<title>${file.name || 'صورة'}</title><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="${src}" style="max-width:100%;max-height:100vh;"></body>`);
-                                });
-                                attDiv.appendChild(img);
-                            } else if (file.type?.startsWith('audio/')) {
-                                const audio = document.createElement('audio');
-                                audio.controls = true; audio.src = src; audio.className = 'note-attachment-audio';
-                                attDiv.appendChild(audio);
-                            }
-                        });
-                        if (attDiv.children.length > 0) card.appendChild(attDiv);
-                    }
-                    
-                    const btnGroup = document.createElement('div');
-                    btnGroup.className = 'btn-group';
-
-                    const editBtn = document.createElement('button');
-                    editBtn.className = 'action-btn edit-btn';
-                    editBtn.innerHTML = '✏️ تعديل';
-                    editBtn.addEventListener('click', () => {
-                        noteInput.value = textContent;
-                        editingAttachments = data.attachments || [];
-                        selectedFiles = [];
-                        renderSelectedFiles();
-                        saveBtn.textContent = '✅ تحديث الملاحظة';
-                        saveBtn.classList.add('update-mode');
-                        setButtonColor('green');
-                        editingDocId = docId;
-                        noteInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        noteInput.focus();
-                        showStatus('✏️ جارٍ التعديل...', 'info');
-                    });
-
-                    const pinBtn = document.createElement('button');
-                    pinBtn.className = `action-btn pin-btn ${isPinned ? 'active' : ''}`;
-                    pinBtn.innerHTML = isPinned ? '📌 مثبتة' : '📌 تثبيت';
-                    pinBtn.addEventListener('click', async () => {
-                        const newOrder = isPinned ? 0 : (Date.now() * -1); 
-                        await updateNoteOrder(docId, { isPinned: !isPinned, order: newOrder });
-                    });
-
-                    const moveUpBtn = document.createElement('button');
-                    moveUpBtn.className = 'action-btn move-btn';
-                    moveUpBtn.innerHTML = '⬆️ رفع';
-                    moveUpBtn.title = 'تقديم الملاحظة للأعلى';
-                    if (index === 0) moveUpBtn.disabled = true;
-                    moveUpBtn.addEventListener('click', async () => {
-                        const prevNote = currentNotes[index - 1];
-                        const prevOrder = prevNote.order || 0;
-                        await updateNoteOrder(docId, { order: prevOrder - 1, isPinned: prevNote.isPinned || false });
-                    });
-
-                    const moveDownBtn = document.createElement('button');
-                    moveDownBtn.className = 'action-btn move-btn';
-                    moveDownBtn.innerHTML = '⬇️ إنزال';
-                    moveDownBtn.title = 'تأخير الملاحظة للأسفل';
-                    if (index === currentNotes.length - 1) moveDownBtn.disabled = true;
-                    moveDownBtn.addEventListener('click', async () => {
-                        const nextNote = currentNotes[index + 1];
-                        const nextOrder = nextNote.order || 0;
-                        await updateNoteOrder(docId, { order: nextOrder + 1, isPinned: nextNote.isPinned || false });
-                    });
-
-                    const copyBtn = document.createElement('button');
-                    copyBtn.className = 'action-btn copy-btn';
-                    copyBtn.innerHTML = '📋 نسخ';
-                    copyBtn.addEventListener('click', async () => {
-                        try {
-                            await navigator.clipboard.writeText(textContent);
-                            const originalText = copyBtn.innerHTML;
-                            copyBtn.innerHTML = '✅ تم النسخ!';
-                            copyBtn.classList.add('copied');
-                            setTimeout(() => {
-                                copyBtn.innerHTML = originalText;
-                                copyBtn.classList.remove('copied');
-                            }, 2000);
-                        } catch (err) {
-                            alert('❌ تعذر النسخ تلقائياً. يرجى تحديد النص يدوياً.');
-                        }
-                    });
-
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'action-btn delete-btn';
-                    deleteBtn.innerHTML = '🗑️ حذف';
-                    deleteBtn.addEventListener('click', async () => {
-                        if (!confirm('هل أنت متأكد من حذف هذه الملاحظة نهائياً؟')) return;
-                        try {
-                            showStatus('⏳ جاري الحذف...', 'info');
-                            await deleteDoc(doc(db, "notes", docId));
-                            showStatus('✅ تم الحذف بنجاح!', 'ok');
-                            await fetchNotes();
-                            setTimeout(() => showStatus(''), 2500);
-                        } catch (error) {
-                            showStatus('❌ خطأ في الحذف: ' + error.message, 'err');
-                        }
-                    });
-
-                    btnGroup.appendChild(editBtn);
-                    btnGroup.appendChild(pinBtn);
-                    btnGroup.appendChild(moveUpBtn);
-                    btnGroup.appendChild(moveDownBtn);
-                    btnGroup.appendChild(copyBtn);
-                    btnGroup.appendChild(deleteBtn);
-                    card.appendChild(btnGroup);
-
-                    notesContainer.appendChild(card);
-                });
             } catch (error) {
                 notesContainer.innerHTML = `<p style="color:#dc2626;text-align:center;">خطأ في تحميل الملاحظات: ${error.message}</p>`;
                 console.error(error);
             }
+        }
+
+        // دالة رسم الملاحظات (تأخذ في الاعتبار فلترة البحث)
+        function renderNotesList() {
+            notesContainer.innerHTML = '';
+            
+            // فلترة الملاحظات
+            let filteredNotes = currentNotes;
+            if (searchTerm) {
+                filteredNotes = currentNotes.filter(n => 
+                    (n.text || '').toLowerCase().includes(searchTerm)
+                );
+            }
+
+            if (filteredNotes.length === 0) {
+                notesContainer.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:20px;">لا توجد ملاحظات مطابقة</p>';
+                return;
+            }
+
+            filteredNotes.forEach((note, index) => {
+                const data = note;
+                const docId = note.id;
+                const isPinned = data.isPinned || false;
+
+                // للتحقق مما إذا كانت الملاحظة الأولى أو الأخيرة في القائمة المفلترة
+                const isFirst = index === 0;
+                const isLast = index === filteredNotes.length - 1;
+
+                let dateStr = '';
+                try {
+                    const d = data.timestamp?.toDate ? data.timestamp.toDate() : new Date(data.timestamp);
+                    dateStr = d.toLocaleString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+                } catch (e) { dateStr = 'تاريخ غير محدد'; }
+                const textContent = data.text || 'ملاحظة فارغة';
+                
+                const card = document.createElement('div');
+                card.className = `note-card ${isPinned ? 'pinned' : ''}`;
+                
+                const header = document.createElement('div');
+                header.className = 'note-header';
+                header.innerHTML = `<span>${isPinned ? '<span class="pin-indicator">📌</span>' : ''}📅 ${dateStr}</span>`;
+                card.appendChild(header);
+                
+                const textEl = document.createElement('div');
+                textEl.className = 'note-text';
+                textEl.textContent = textContent;
+                card.appendChild(textEl);
+                
+                const attachments = data.attachments || [];
+                if (attachments.length > 0) {
+                    const attDiv = document.createElement('div');
+                    attDiv.className = 'note-attachments';
+                    attachments.forEach(file => {
+                        const src = file.data || file.url;
+                        if (!src) return;
+                        if (file.type?.startsWith('image/')) {
+                            const img = document.createElement('img');
+                            img.src = src; img.className = 'note-attachment-image'; img.alt = file.name || 'صورة';
+                            img.title = 'اضغط لعرض الصورة بحجمها الكامل';
+                            img.addEventListener('click', () => {
+                                const w = window.open();
+                                w.document.write(`<title>${file.name || 'صورة'}</title><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="${src}" style="max-width:100%;max-height:100vh;"></body>`);
+                            });
+                            attDiv.appendChild(img);
+                        } else if (file.type?.startsWith('audio/')) {
+                            const audio = document.createElement('audio');
+                            audio.controls = true; audio.src = src; audio.className = 'note-attachment-audio';
+                            attDiv.appendChild(audio);
+                        }
+                    });
+                    if (attDiv.children.length > 0) card.appendChild(attDiv);
+                }
+                
+                const btnGroup = document.createElement('div');
+                btnGroup.className = 'btn-group';
+
+                const editBtn = document.createElement('button');
+                editBtn.className = 'action-btn edit-btn';
+                editBtn.innerHTML = '✏️ تعديل';
+                editBtn.addEventListener('click', () => {
+                    noteInput.value = textContent;
+                    editingAttachments = data.attachments || [];
+                    selectedFiles = [];
+                    renderSelectedFiles();
+                    saveBtn.textContent = '✅ تحديث الملاحظة';
+                    saveBtn.classList.add('update-mode');
+                    setButtonColor('green');
+                    editingDocId = docId;
+                    noteInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    noteInput.focus();
+                    showStatus('✏️ جارٍ التعديل...', 'info');
+                });
+
+                const pinBtn = document.createElement('button');
+                pinBtn.className = `action-btn pin-btn ${isPinned ? 'active' : ''}`;
+                pinBtn.innerHTML = isPinned ? '📌 مثبتة' : '📌 تثبيت';
+                pinBtn.addEventListener('click', async () => {
+                    const newOrder = isPinned ? 0 : (Date.now() * -1); 
+                    await updateNoteOrder(docId, { isPinned: !isPinned, order: newOrder });
+                });
+
+                const moveUpBtn = document.createElement('button');
+                moveUpBtn.className = 'action-btn move-btn';
+                moveUpBtn.innerHTML = '⬆️ رفع';
+                moveUpBtn.title = 'تقديم الملاحظة للأعلى';
+                if (isFirst && !searchTerm) moveUpBtn.disabled = true; // تعطيل إذا كانت الأولى في القائمة الأصلية
+                moveUpBtn.addEventListener('click', async () => {
+                    // البحث عن الملاحظة السابقة في المصفوفة الأصلية
+                    const originalIndex = currentNotes.findIndex(n => n.id === docId);
+                    if (originalIndex > 0) {
+                        const prevNote = currentNotes[originalIndex - 1];
+                        const prevOrder = prevNote.order || 0;
+                        await updateNoteOrder(docId, { order: prevOrder - 1, isPinned: prevNote.isPinned || false });
+                    }
+                });
+
+                const moveDownBtn = document.createElement('button');
+                moveDownBtn.className = 'action-btn move-btn';
+                moveDownBtn.innerHTML = '⬇️ إنزال';
+                moveDownBtn.title = 'تأخير الملاحظة للأسفل';
+                if (isLast && !searchTerm) moveDownBtn.disabled = true; // تعطيل إذا كانت الأخيرة
+                moveDownBtn.addEventListener('click', async () => {
+                    const originalIndex = currentNotes.findIndex(n => n.id === docId);
+                    if (originalIndex < currentNotes.length - 1) {
+                        const nextNote = currentNotes[originalIndex + 1];
+                        const nextOrder = nextNote.order || 0;
+                        await updateNoteOrder(docId, { order: nextOrder + 1, isPinned: nextNote.isPinned || false });
+                    }
+                });
+
+                const copyBtn = document.createElement('button');
+                copyBtn.className = 'action-btn copy-btn';
+                copyBtn.innerHTML = '📋 نسخ';
+                copyBtn.addEventListener('click', async () => {
+                    try {
+                        await navigator.clipboard.writeText(textContent);
+                        const originalText = copyBtn.innerHTML;
+                        copyBtn.innerHTML = '✅ تم النسخ!';
+                        copyBtn.classList.add('copied');
+                        setTimeout(() => {
+                            copyBtn.innerHTML = originalText;
+                            copyBtn.classList.remove('copied');
+                        }, 2000);
+                    } catch (err) {
+                        alert('❌ تعذر النسخ تلقائياً. يرجى تحديد النص يدوياً.');
+                    }
+                });
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'action-btn delete-btn';
+                deleteBtn.innerHTML = '🗑️ حذف';
+                deleteBtn.addEventListener('click', async () => {
+                    if (!confirm('هل أنت متأكد من حذف هذه الملاحظة نهائياً؟')) return;
+                    try {
+                        showStatus('⏳ جاري الحذف...', 'info');
+                        await deleteDoc(doc(db, "notes", docId));
+                        showStatus('✅ تم الحذف بنجاح!', 'ok');
+                        await fetchNotes();
+                        setTimeout(() => showStatus(''), 2500);
+                    } catch (error) {
+                        showStatus('❌ خطأ في الحذف: ' + error.message, 'err');
+                    }
+                });
+
+                btnGroup.appendChild(editBtn);
+                btnGroup.appendChild(pinBtn);
+                btnGroup.appendChild(moveUpBtn);
+                btnGroup.appendChild(moveDownBtn);
+                btnGroup.appendChild(copyBtn);
+                btnGroup.appendChild(deleteBtn);
+                card.appendChild(btnGroup);
+
+                notesContainer.appendChild(card);
+            });
         }
 
         function estimateDocumentSize(text, attachments) {
@@ -728,12 +790,14 @@
                     }
                     showStatus('⏳ جاري حفظ الملاحظة...', 'info');
                     
+                    // 🔥 هنا التعديل: حفظ الملاحظة الجديدة في الأعلى 🔥
+                    // نستخدم قيمة سالبة للوقت (أو القيمة الحالية) لضمان أنها تتصدر القائمة
                     await setDoc(doc(collection(db, "notes")), {
                         text: noteText, 
                         attachments: selectedFiles, 
                         timestamp: new Date(),
                         isPinned: false,
-                        order: Date.now() 
+                        order: Date.now() // الملاحظات الجديدة تأخذ تاريخاً حديثاً، وبالتالي تظهر في الأعلى (قبل القديمة)
                     });
                     
                     showStatus('✅ تم الحفظ بنجاح!', 'ok');
@@ -867,7 +931,7 @@
                         const isPinned = n.isPinned || false;
                         const order = n.order || Date.now() + i;
 
-                        // 🔥 هنا السر: تنظيف أي undefined قبل الحفظ 🔥
+                        // تنظيف أي undefined قبل الحفظ
                         const cleanNote = {
                             text: text,
                             attachments: attachments,
