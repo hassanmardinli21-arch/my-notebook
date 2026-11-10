@@ -6,239 +6,85 @@
     <title>دفتر الملاحظات السحابي</title>
     <style>
         :root {
-            --paper-bg: #f4e4bc;
-            --paper-card: #faf0d7;
-            --paper-dark: #e8d7a8;
-            --paper-border: #c9a961;
-            --ink-dark: #3e2c1c;
-            --ink-medium: #5c4530;
-            --ink-light: #8b6f47;
-            --bg-outer: #5d4a35;
-            --bg-outer-light: #7a6344;
-            --primary-color: #8b5a2b;
-            --success-color: #5d8a3e;
-            --danger-color: #a83232;
-            --transition-speed: 0.25s;
+            --paper-bg: #f4e4bc; --paper-card: #faf0d7; --paper-border: #c9a961;
+            --ink-dark: #3e2c1c; --ink-medium: #5c4530; --primary: #8b5a2b;
+            --danger: #a83232; --success: #5d8a3e;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
-            font-family: 'Georgia', 'Times New Roman', 'Amiri', serif;
-            background: radial-gradient(ellipse at center, var(--bg-outer-light) 0%, var(--bg-outer) 100%),
-                repeating-linear-gradient(90deg, rgba(0,0,0,0.03) 0px, rgba(0,0,0,0.03) 2px, transparent 2px, transparent 6px);
-            background-attachment: fixed;
-            color: var(--ink-dark);
-            padding: 20px;
-            min-height: 100vh;
-            padding-bottom: 100px;
+            font-family: 'Georgia', 'Amiri', serif;
+            background: radial-gradient(circle at center, #7a6344 0%, #5d4a35 100%);
+            color: var(--ink-dark); padding: 20px; min-height: 100vh; padding-bottom: 100px;
         }
         .container {
-            max-width: 800px;
-            margin: 0 auto;
-            background: radial-gradient(circle at 20% 30%, rgba(180, 140, 80, 0.08) 0%, transparent 25%),
-                radial-gradient(circle at 80% 70%, rgba(160, 120, 60, 0.06) 0%, transparent 30%),
-                radial-gradient(circle at 50% 90%, rgba(140, 100, 50, 0.05) 0%, transparent 20%),
-                var(--paper-bg);
-            padding: 30px;
-            border-radius: 8px;
-            border: 2px solid #a8845a;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 8px 15px rgba(0,0,0,0.3),
-                inset 0 0 0 6px var(--paper-bg), inset 0 0 0 7px var(--paper-border),
-                inset 0 0 60px rgba(160, 120, 60, 0.15);
-            position: relative;
+            max-width: 800px; margin: 0 auto; background: var(--paper-bg);
+            padding: 30px; border-radius: 8px; border: 2px solid #a8845a;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative;
         }
-        .container::before, .container::after {
-            content: ""; position: absolute; width: 30px; height: 30px;
-            border: 2px solid var(--paper-border); pointer-events: none;
-        }
-        .container::before { top: 12px; right: 12px; border-left: none; border-bottom: none; }
-        .container::after { bottom: 12px; left: 12px; border-right: none; border-top: none; }
-        h2 {
-            font-family: 'Georgia', 'Amiri', serif; font-size: 28px; font-weight: 700;
-            color: var(--ink-dark); text-align: center; margin-bottom: 20px;
-            text-shadow: 1px 1px 0 rgba(255, 255, 255, 0.5), -1px -1px 0 rgba(0, 0, 0, 0.05);
-            border-bottom: 2px double var(--paper-border); padding-bottom: 15px;
-        }
-        h2::after { content: " ☁️"; font-size: 26px; }
-        .limit-info {
-            background: rgba(255, 235, 180, 0.6); border: 1px solid var(--paper-border);
-            color: var(--ink-medium); padding: 10px 14px; border-radius: 6px;
-            font-size: 13px; text-align: center; margin-bottom: 15px;
-            line-height: 1.6; font-style: italic;
-        }
-        .limit-info strong { color: var(--ink-dark); font-style: normal; }
+        h2 { text-align: center; font-size: 26px; margin-bottom: 20px; border-bottom: 2px double var(--paper-border); padding-bottom: 10px; }
         textarea {
-            width: 100%; height: 140px; padding: 15px;
-            border: 2px solid var(--paper-border); border-radius: 6px;
-            font-size: 16px; font-family: 'Georgia', 'Amiri', serif;
-            resize: vertical; background: var(--paper-card); color: var(--ink-dark);
-            line-height: 1.6; box-shadow: inset 2px 2px 6px rgba(160, 120, 60, 0.1);
+            width: 100%; height: 120px; padding: 15px; border: 2px solid var(--paper-border);
+            border-radius: 6px; font-family: inherit; font-size: 16px; background: var(--paper-card);
+            resize: vertical; color: var(--ink-dark);
         }
-        textarea:focus {
-            outline: none; border-color: var(--primary-color); background: #fdf6e3;
-            box-shadow: inset 2px 2px 6px rgba(160, 120, 60, 0.15), 0 0 0 3px rgba(200, 169, 97, 0.2);
+        textarea:focus { outline: none; border-color: var(--primary); }
+        .attachments-box { display: flex; gap: 10px; margin: 15px 0; flex-wrap: wrap; }
+        .attachment-btn {
+            flex: 1; min-width: 150px; padding: 10px; text-align: center; border: 2px solid var(--paper-border);
+            border-radius: 6px; background: var(--paper-card); cursor: pointer; font-weight: bold;
         }
-        textarea::placeholder { color: var(--ink-light); font-style: italic; }
         #saveBtn {
-            background: linear-gradient(145deg, #a06b3a, #8b5a2b);
-            color: #fdf6e3; border: 1px solid #6f4620;
-            padding: 14px 20px; border-radius: 6px; font-size: 18px; font-weight: 600;
-            width: 100%; margin-top: 15px; transition: all var(--transition-speed) ease;
-            box-shadow: 0 4px 6px -1px rgba(60, 40, 20, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
-            letter-spacing: 0.3px; cursor: pointer; font-family: 'Georgia', 'Amiri', serif;
+            width: 100%; padding: 14px; border-radius: 6px; font-size: 18px; font-weight: bold;
+            cursor: pointer; border: 2px solid var(--danger); background: #f5d5d5; color: var(--danger);
+            margin-top: 10px; font-family: inherit;
         }
-        #saveBtn:hover { background: linear-gradient(145deg, #8b5a2b, #6f4620); transform: translateY(-2px); }
-        #saveBtn.update-mode { background: linear-gradient(145deg, #6b9d4a, var(--success-color)); border-color: #4a6b32; }
-        #saveBtn.text-red { color: var(--danger-color) !important; background: #f5d5d5 !important; border: 2px solid var(--danger-color) !important; box-shadow: none !important; }
-        #saveBtn.text-green { color: #4a6b32 !important; background: #d9e8cc !important; border: 2px solid var(--success-color) !important; box-shadow: none !important; }
-        #status { text-align: center; margin-top: 15px; font-size: 15px; font-weight: 600; padding: 10px; border-radius: 6px; transition: all 0.2s ease; min-height: 0; font-style: italic; }
-        #status:empty { padding: 0; }
-
-        .backup-box { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
-        .backup-btn {
-            flex: 1; min-width: 150px; padding: 12px 15px; border-radius: 6px;
-            font-size: 15px; font-weight: 600; cursor: pointer; text-align: center;
-            border: 2px solid; font-family: 'Georgia', 'Amiri', serif;
-            transition: all 0.2s ease; user-select: none;
-        }
-        .backup-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-        .export-btn { background: #e8dcc0; color: #6f4620; border-color: var(--paper-border); }
-        .export-btn:hover:not(:disabled) { background: #dcc99a; transform: translateY(-2px); }
-        .import-btn { background: #dfe8d0; color: #4a6b32; border-color: #a8bf8a; }
-        .import-btn:hover:not(:disabled) { background: #cfdcc0; transform: translateY(-2px); }
-
-        .toggle-index-btn {
-            background: linear-gradient(145deg, #5c4530, #3e2c1c); color: #f4e4bc;
-            border: 1px solid #2a1e12; padding: 10px 18px; border-radius: 6px;
-            font-size: 16px; font-weight: 600; cursor: pointer; width: 100%;
-            margin: 20px 0 10px 0; box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-            font-family: 'Georgia', 'Amiri', serif; transition: all var(--transition-speed) ease;
-        }
-        .toggle-index-btn:hover { background: linear-gradient(145deg, #6f563a, #5c4530); transform: translateY(-2px); }
+        #status { text-align: center; margin-top: 10px; font-weight: bold; font-size: 15px; }
         
-        .notes-list { margin-top: 10px; border-top: 2px double var(--paper-border); padding-top: 15px; display: none; }
+        .backup-box { display: flex; gap: 10px; margin-top: 15px; flex-wrap: wrap; }
+        .backup-btn { flex: 1; padding: 10px; border-radius: 6px; border: 2px solid var(--paper-border); background: var(--paper-card); cursor: pointer; font-family: inherit; font-weight: bold; }
+        
+        .toggle-index-btn { width: 100%; margin-top: 20px; padding: 12px; font-size: 16px; background: #5c4530; color: #f4e4bc; border: none; border-radius: 6px; cursor: pointer; font-family: inherit; }
+        .notes-list { margin-top: 15px; display: none; border-top: 2px double var(--paper-border); padding-top: 15px; }
         .notes-list.visible { display: block; }
 
         .search-box { margin-bottom: 15px; }
-        .search-box input {
-            width: 100%; padding: 12px 15px;
-            border: 2px solid var(--paper-border); border-radius: 6px;
-            font-size: 16px; font-family: 'Georgia', 'Amiri', serif;
-            background: var(--paper-card); color: var(--ink-dark);
-        }
-        .search-box input:focus { outline: none; border-color: var(--primary-color); }
+        .search-box input { width: 100%; padding: 12px; border: 2px solid var(--paper-border); border-radius: 6px; font-family: inherit; font-size: 16px; background: var(--paper-card); }
 
-        #notesContainer { display: flex; flex-direction: column; gap: 15px; margin-top: 10px; }
+        .note-card { background: var(--paper-card); border: 1px solid var(--paper-border); border-radius: 6px; padding: 15px; margin-bottom: 15px; }
+        .note-card.pinned { border: 2px solid #d4af37; background: #fdf5df; }
+        .note-header { font-size: 12px; color: var(--ink-medium); margin-bottom: 10px; border-bottom: 1px dashed var(--paper-border); padding-bottom: 5px; }
+        .note-text { font-size: 16px; margin-bottom: 15px; white-space: pre-wrap; }
         
-        .note-card {
-            background: radial-gradient(circle at 80% 20%, rgba(180, 140, 80, 0.06) 0%, transparent 40%), var(--paper-card);
-            border: 1px solid var(--paper-border); border-radius: 4px; padding: 18px;
-            box-shadow: 0 2px 5px rgba(120, 80, 40, 0.15), inset 0 0 20px rgba(160, 120, 60, 0.05);
-            transition: all 0.3s ease; scroll-margin-top: 20px;
-        }
-        .note-card.pinned {
-            border: 2px solid #b08d57;
-            box-shadow: 0 4px 12px rgba(139, 90, 43, 0.3), inset 0 0 20px rgba(200, 169, 97, 0.2);
-            background: radial-gradient(circle at 80% 20%, rgba(200, 160, 80, 0.1) 0%, transparent 40%), #fdf5df;
-        }
-
-        .note-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; font-size: 13px; color: var(--ink-light); font-style: italic; border-bottom: 1px dashed var(--paper-border); padding-bottom: 8px; }
-        .pin-indicator { font-size: 16px; margin-left: 5px; }
-        .note-text { font-size: 16px; line-height: 1.8; white-space: pre-wrap; word-wrap: break-word; color: var(--ink-dark); margin-bottom: 12px; }
-        
-        .btn-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; margin-top: 12px; }
-        .action-btn { 
-            padding: 8px 10px; border-radius: 6px; border: 1px solid; 
-            font-size: 13px; font-weight: 600; cursor: pointer; 
-            font-family: 'Georgia', 'Amiri', serif; transition: all 0.2s; 
-            display: flex; align-items: center; justify-content: center; gap: 4px;
-        }
-        
-        .edit-btn { background: #e8dcc0; color: #6f4620; border-color: var(--paper-border); }
-        .edit-btn:hover { background: #dcc99a; }
-        .pin-btn { background: #ebdcd0; color: #8b4513; border-color: #c9a07c; }
-        .pin-btn:hover { background: #e0ccbd; }
-        .pin-btn.active { background: #f7e8c8; border-color: #d4af37; color: #a67c00; box-shadow: inset 0 0 5px rgba(212,175,55,0.5); }
-        .move-btn { background: #e2e8f0; color: #334155; border-color: #94a3b8; padding: 8px 4px; }
-        .move-btn:hover { background: #cbd5e1; }
-        .copy-btn { background: #d4e2eb; color: #2c5a7a; border-color: #9bb8cc; }
-        .copy-btn:hover { background: #c0d6e3; }
-        .copy-btn.copied { background: #c6e3c6; color: #2f5c2f; border-color: #8ebd8e; }
-        .delete-btn { background: #ecd5d5; color: var(--danger-color); border-color: #c99a9a; }
-        .delete-btn:hover { background: #e0bcbc; }
-        
-        .attachments-box { display: flex; gap: 10px; margin: 12px 0; flex-wrap: wrap; }
-        .attachment-btn { flex: 1; min-width: 180px; padding: 12px 15px; border-radius: 6px; text-align: center; cursor: pointer; font-size: 16px; font-weight: 600; border: 2px solid; user-select: none; font-family: 'Georgia', 'Amiri', serif; }
-        .image-btn { background: #e8dcc0; color: #6f4620; border-color: var(--paper-border); }
-        .image-btn:hover { background: #dcc99a; transform: translateY(-2px); }
-        .audio-btn { background: #e0d8c4; color: #5c4530; border-color: #b39b6c; }
-        .audio-btn:hover { background: #d4c9ac; transform: translateY(-2px); }
-        #selectedFiles { display: flex; flex-direction: column; gap: 8px; margin: 10px 0; }
-        #selectedFiles:empty { margin: 0; }
-        .selected-file { background: var(--paper-card); border: 1px solid var(--paper-border); border-radius: 6px; padding: 10px; display: flex; align-items: center; gap: 10px; font-size: 14px; }
-        .selected-file-name { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .selected-file-size { font-size: 12px; color: var(--ink-light); }
-        .selected-file button { background: #ecd5d5; color: var(--danger-color); border: 1px solid #c99a9a; border-radius: 4px; padding: 4px 8px; cursor: pointer; }
-        .selected-file button:hover { background: #e0bcbc; }
-        .total-size-bar { background: var(--paper-dark); border: 1px solid var(--paper-border); border-radius: 6px; padding: 10px 14px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; margin-top: 8px; color: var(--ink-medium); }
-        .total-size-bar.warning { background: #f5e3b8; color: #8b5a2b; }
-        .total-size-bar.danger { background: #f0d0d0; color: #8b1a1a; border-color: #c99a9a; }
-        .note-attachments { margin-top: 12px; display: flex; flex-direction: column; gap: 10px; }
-        .note-attachment-image { max-width: 100%; max-height: 300px; border-radius: 4px; border: 3px solid var(--paper-card); box-shadow: 0 2px 8px rgba(120, 80, 40, 0.3), 0 0 0 1px var(--paper-border); cursor: pointer; }
-        .note-attachment-image:hover { transform: scale(1.01); }
-        .note-attachment-audio { width: 100%; border-radius: 6px; filter: sepia(30%) contrast(95%); }
+        .btn-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 5px; }
+        .action-btn { padding: 8px; border-radius: 4px; border: 1px solid var(--paper-border); cursor: pointer; font-family: inherit; font-size: 12px; font-weight: bold; }
 
         .floating-toolbar {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-            display: flex; gap: 12px; background: rgba(62, 44, 28, 0.95);
-            padding: 10px 20px; border-radius: 40px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.5); border: 2px solid #c9a961;
-            z-index: 99999;
+            display: flex; gap: 10px; background: #3e2c1c; padding: 10px 20px; border-radius: 30px; z-index: 9999;
         }
-        .toolbar-btn {
-            width: 45px; height: 45px; border-radius: 50%;
-            background: #f4e4bc; color: #3e2c1c; border: none;
-            font-size: 20px; cursor: pointer; transition: all 0.2s ease;
-            display: flex; align-items: center; justify-content: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        .toolbar-btn:hover { background: #fff; transform: scale(1.1); }
-        .toolbar-btn.note-nav { background: #8b5a2b; color: #fff; }
-        .toolbar-btn.note-nav:hover { background: #a06b3a; }
+        .toolbar-btn { width: 40px; height: 40px; border-radius: 50%; border: none; font-size: 18px; cursor: pointer; background: #f4e4bc; }
+        .toolbar-btn.dark { background: #8b5a2b; color: white; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>دفتر الملاحظات السحابي</h2>
-
-        <div class="limit-info">
-            ⚠️ <strong>حد Firestore: 1 MB لكل ملاحظة</strong><br>
-            الصور تُضغط تلقائياً • الصوت المسموح: أقل من 500 KB<br>
-            <span style="color: #6f4620; font-weight: bold;">💡 يمكنك لصق الصور، أو استخدام 📌 لتثبيت المهمة بالأعلى!</span>
-        </div>
-
-        <textarea id="noteInput" placeholder="✍️ اكتب ملاحظاتك هنا... (ويمكنك لصق صورة مباشرة هنا)"></textarea>
-
+        <h2>دفتر الملاحظات السحابي ☁️</h2>
+        
+        <textarea id="noteInput" placeholder="✍️ اكتب ملاحظتك هنا..."></textarea>
+        
         <div class="attachments-box">
-            <label class="attachment-btn image-btn">
-                🖼️ إضافة صور
-                <input type="file" id="imageInput" accept="image/*" multiple hidden>
-            </label>
-            <label class="attachment-btn audio-btn">
-                🎵 إضافة ملفات صوتية
-                <input type="file" id="audioInput" accept="audio/*" multiple hidden>
-            </label>
+            <label class="attachment-btn">🖼️ إضافة صور <input type="file" id="imageInput" accept="image/*" multiple hidden></label>
+            <label class="attachment-btn">🎵 إضافة صوت <input type="file" id="audioInput" accept="audio/*" multiple hidden></label>
         </div>
-
         <div id="selectedFiles"></div>
 
-        <button id="saveBtn" class="text-red">💾 حفظ على السحابة</button>
-
+        <button id="saveBtn">💾 حفظ على السحابة</button>
         <p id="status"></p>
 
         <div class="backup-box">
-            <button type="button" class="backup-btn export-btn" id="exportBtn">📤 تصدير الملاحظات</button>
-            <button type="button" class="backup-btn import-btn" id="importBtn">📥 استيراد الملاحظات</button>
-            <input type="file" id="importInput" accept=".json,application/json" hidden>
+            <button class="backup-btn" id="exportBtn">📤 تصدير</button>
+            <button class="backup-btn" id="importBtn">📥 استيراد</button>
+            <input type="file" id="importInput" accept=".json" hidden>
         </div>
 
         <button class="toggle-index-btn" id="toggleIndexBtn">📂 إظهار الفهرس</button>
@@ -247,23 +93,20 @@
             <div class="search-box">
                 <input type="text" id="searchInput" placeholder="🔍 ابحث في الملاحظات...">
             </div>
-            <div id="notesContainer">⏳ جاري تحميل الملاحظات...</div>
+            <div id="notesContainer">⏳ جاري التحميل...</div>
         </div>
     </div>
 
     <div class="floating-toolbar">
-        <button class="toolbar-btn" id="scrollTopBtn" title="أعلى الصفحة">⬆️</button>
-        <button class="toolbar-btn note-nav" id="goToFirstBtn" title="أول ملاحظة">🔝</button>
-        <button class="toolbar-btn note-nav" id="goToLastBtn" title="آخر ملاحظة">🔚</button>
-        <button class="toolbar-btn" id="scrollBottomBtn" title="أسفل الصفحة">⬇️</button>
+        <button class="toolbar-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">⬆️</button>
+        <button class="toolbar-btn dark" onclick="scrollToFirst()">🔝</button>
+        <button class="toolbar-btn dark" onclick="scrollToLast()">🔚</button>
+        <button class="toolbar-btn" onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})">⬇️</button>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import {
-            getFirestore, collection, query, getDocs,
-            doc, setDoc, updateDoc, deleteDoc
-        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+        import { getFirestore, collection, query, getDocs, doc, setDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyBrXDy3FuN6YJlIYTWCD_TsfMvkmiWZiLo",
@@ -271,18 +114,10 @@
             projectId: "hassanmedication",
             storageBucket: "hassanmedication.firebasestorage.app",
             messagingSenderId: "1023452446639",
-            appId: "1:1023452446639:web:dedf54f7ff5c4c93d9795a",
-            measurementId: "G-H1GL9JD2KP"
+            appId: "1:1023452446639:web:dedf54f7ff5c4c93d9795a"
         };
-
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
-
-        const FIRESTORE_LIMIT = 1_000_000;
-        const SAFE_LIMIT = 900_000;
-        const MAX_IMAGE_DIMENSION = 800;
-        const IMAGE_QUALITY = 0.7;
-        const MAX_AUDIO_SIZE = 500_000;
 
         const notesContainer = document.getElementById('notesContainer');
         const statusEl = document.getElementById('status');
@@ -290,416 +125,138 @@
         const saveBtn = document.getElementById('saveBtn');
         const notesList = document.getElementById('notesList');
         const toggleBtn = document.getElementById('toggleIndexBtn');
-        const imageInput = document.getElementById('imageInput');
-        const audioInput = document.getElementById('audioInput');
-        const selectedFilesEl = document.getElementById('selectedFiles');
-        const exportBtn = document.getElementById('exportBtn');
-        const importBtn = document.getElementById('importBtn');
-        const importInput = document.getElementById('importInput');
         const searchInput = document.getElementById('searchInput');
-        const goToFirstBtn = document.getElementById('goToFirstBtn');
-        const goToLastBtn = document.getElementById('goToLastBtn');
 
+        let currentNotes = []; 
         let editingDocId = null;
         let selectedFiles = [];
-        let editingAttachments = [];
-        let isVisible = false;
-        let currentNotes = []; 
         let searchTerm = '';
 
-        // أحداث التمرير
-        document.getElementById('scrollTopBtn').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-        document.getElementById('scrollBottomBtn').addEventListener('click', () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
+        window.scrollToFirst = () => { const c = notesContainer.querySelector('.note-card'); if(c) c.scrollIntoView({behavior:'smooth',block:'center'}); };
+        window.scrollToLast = () => { const c = notesContainer.querySelectorAll('.note-card'); if(c.length) c[c.length-1].scrollIntoView({behavior:'smooth',block:'center'}); };
 
-        // التنقل بين الملاحظات
-        goToFirstBtn.addEventListener('click', () => {
-            const firstCard = notesContainer.querySelector('.note-card');
-            if (firstCard) firstCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        });
+        toggleBtn.onclick = () => { notesList.classList.toggle('visible'); toggleBtn.textContent = notesList.classList.contains('visible') ? '📂 إخفاء الفهرس' : '📂 إظهار الفهرس'; };
+        searchInput.oninput = (e) => { searchTerm = e.target.value.toLowerCase().trim(); renderNotes(); };
+        document.getElementById('imageInput').onchange = async (e) => { await processFiles(e.target.files, 'image'); e.target.value=''; };
+        document.getElementById('audioInput').onchange = async (e) => { await processFiles(e.target.files, 'audio'); e.target.value=''; };
 
-        goToLastBtn.addEventListener('click', () => {
-            const cards = notesContainer.querySelectorAll('.note-card');
-            if (cards.length > 0) cards[cards.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
-        });
+        function showStatus(msg, color = '#2563eb') { statusEl.style.color = color; statusEl.innerText = msg; if(msg.includes('✅')) setTimeout(()=>statusEl.innerText='', 3000); }
+        function bytesToReadable(b) { return b < 1024*1024 ? (b/1024).toFixed(0)+' KB' : (b/(1024*1024)).toFixed(2)+' MB'; }
 
-        // الفهرس
-        toggleBtn.addEventListener('click', () => {
-            isVisible = !isVisible;
-            notesList.classList.toggle('visible', isVisible);
-            toggleBtn.textContent = isVisible ? '📂 إخفاء الفهرس' : '📂 إظهار الفهرس';
-        });
-
-        // البحث
-        searchInput.addEventListener('input', (e) => {
-            searchTerm = e.target.value.toLowerCase().trim();
-            renderNotesList();
-        });
-
-        function setButtonColor(color) {
-            saveBtn.classList.remove('text-red', 'text-green');
-            if (color === 'red') saveBtn.classList.add('text-red');
-            else if (color === 'green') saveBtn.classList.add('text-green');
-        }
-
-        function bytesToReadable(bytes) {
-            if (bytes < 1024) return bytes + ' B';
-            if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(0) + ' KB';
-            return (bytes / (1024 * 1024)).toFixed(2) + ' MB';
-        }
-
-        function showStatus(msg, kind = 'info') {
-            const palette = { info: { color: '#2563eb', bg: '#eff6ff' }, ok: { color: '#16a34a', bg: '#f0fdf4' }, err: { color: '#dc2626', bg: '#fef2f2' } };
-            const c = palette[kind] || palette.info;
-            if (!msg) { statusEl.innerText = ''; statusEl.style.background = 'transparent'; return; }
-            statusEl.style.color = c.color; statusEl.style.background = c.bg; statusEl.innerText = msg;
-        }
-
-        function compressImage(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let { width, height } = img;
-                        if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
-                            const ratio = Math.min(MAX_IMAGE_DIMENSION / width, MAX_IMAGE_DIMENSION / height);
-                            width = Math.floor(width * ratio); height = Math.floor(height * ratio);
-                        }
-                        canvas.width = width; canvas.height = height;
-                        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-                        resolve(canvas.toDataURL('image/jpeg', IMAGE_QUALITY));
-                    };
-                    img.onerror = () => reject(new Error('فشل تحميل الصورة'));
-                    img.src = e.target.result;
-                };
-                reader.onerror = () => reject(new Error('فشل قراءة الملف'));
-                reader.readAsDataURL(file);
-            });
-        }
-
-        function fileToBase64(file) {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.onerror = () => reject(new Error('فشل قراءة الملف'));
-                reader.readAsDataURL(file);
-            });
-        }
-
-        imageInput.addEventListener('change', async () => { await processFiles(imageInput.files, 'image'); imageInput.value = ''; });
-        audioInput.addEventListener('change', async () => { await processFiles(audioInput.files, 'audio'); audioInput.value = ''; });
-
-        async function processFiles(files, kind) {
-            for (const file of files) {
-                try {
-                    if (kind === 'image') {
-                        if (!file.type.startsWith('image/')) continue;
-                        showStatus(`⏳ جاري ضغط الصورة: ${file.name || 'صورة ملصوقة'}`, 'info');
-                        const dataUrl = await compressImage(file);
-                        selectedFiles.push({ name: file.name || `صورة_ملصوقة_${Date.now()}.jpg`, type: 'image/jpeg', size: Math.floor(dataUrl.length * 0.75), data: dataUrl });
-                    } else {
-                        if (!file.type.startsWith('audio/')) continue;
-                        if (file.size > MAX_AUDIO_SIZE) { alert(`⚠️ الملف "${file.name}" كبير جداً\nالحد الأقصى: ${bytesToReadable(MAX_AUDIO_SIZE)}`); continue; }
-                        showStatus(`⏳ جاري معالجة: ${file.name}`, 'info');
-                        const dataUrl = await fileToBase64(file);
-                        selectedFiles.push({ name: file.name, type: file.type, size: file.size, data: dataUrl });
-                    }
-                } catch (err) { alert(`❌ فشل معالجة الملف: ${err.message}`); }
+        async function processFiles(files, type) {
+            for (let f of files) {
+                if (type === 'image' && !f.type.startsWith('image/')) continue;
+                if (type === 'audio' && (!f.type.startsWith('audio/') || f.size > 500000)) { alert('ملف الصوت كبير جداً!'); continue; }
+                showStatus('⏳ جاري المعالجة...');
+                const base64 = await new Promise(r => { const reader = new FileReader(); reader.onload = e => r(e.target.result); reader.readAsDataURL(f); });
+                selectedFiles.push({ name: f.name, type: f.type, size: f.size, data: base64 });
             }
-            showStatus(''); renderSelectedFiles();
+            showStatus('');
+            renderSelected();
         }
 
-        function renderSelectedFiles() {
-            selectedFilesEl.innerHTML = '';
-            if (selectedFiles.length === 0) return;
-            let totalSize = 0;
-            selectedFiles.forEach((file, index) => {
-                totalSize += file.size;
-                const row = document.createElement('div');
-                row.className = 'selected-file';
-                const icon = file.type.startsWith('image/') ? '🖼️' : '🎵';
-                row.innerHTML = `<span class="selected-file-name">${icon} ${file.name}</span><span class="selected-file-size">${bytesToReadable(file.size)}</span>`;
-                const removeBtn = document.createElement('button');
-                removeBtn.type = 'button'; removeBtn.textContent = '❌';
-                removeBtn.addEventListener('click', () => { selectedFiles.splice(index, 1); renderSelectedFiles(); });
-                row.appendChild(removeBtn);
-                selectedFilesEl.appendChild(row);
-            });
-            const bar = document.createElement('div');
-            bar.className = 'total-size-bar';
-            const percent = Math.round((totalSize / SAFE_LIMIT) * 100);
-            bar.innerHTML = `<span>📦 الحجم الإجمالي</span><strong>${bytesToReadable(totalSize)} / ${bytesToReadable(SAFE_LIMIT)} (${percent}%)</strong>`;
-            if (totalSize > SAFE_LIMIT) bar.classList.add('danger');
-            else if (totalSize > SAFE_LIMIT * 0.7) bar.classList.add('warning');
-            selectedFilesEl.appendChild(bar);
+        function renderSelected() {
+            const el = document.getElementById('selectedFiles');
+            el.innerHTML = selectedFiles.map((f, i) => `<div style="font-size:12px; margin-bottom:5px;">📎 ${f.name} <button onclick="window.removeFile(${i})" style="color:red;border:none;background:none;cursor:pointer;">❌</button></div>`).join('');
         }
-
-        async function updateNoteOrder(docId, updates) {
-            try {
-                showStatus('⏳ جاري تحديث الترتيب...', 'info');
-                await updateDoc(doc(db, "notes", docId), updates);
-                showStatus('✅ تم تحديث الترتيب!', 'ok');
-                await fetchNotes();
-                setTimeout(() => showStatus(''), 2000);
-            } catch (error) { showStatus('❌ خطأ في التحديث: ' + error.message, 'err'); }
-        }
+        window.removeFile = (i) => { selectedFiles.splice(i, 1); renderSelected(); };
 
         async function fetchNotes() {
-            try {
-                const q = query(collection(db, "notes"));
-                const snap = await getDocs(q);
-                currentNotes = []; 
-                snap.forEach(d => { currentNotes.push({ id: d.id, ...d.data() }); });
-
-                currentNotes.sort((a, b) => {
-                    const pinA = a.isPinned ? 1 : 0;
-                    const pinB = b.isPinned ? 1 : 0;
-                    if (pinA !== pinB) return pinB - pinA; 
-                    return (b.order || 0) - (a.order || 0); // الأحدث (order الأكبر) أولاً
-                });
-
-                renderNotesList();
-            } catch (error) { notesContainer.innerHTML = `<p style="color:#dc2626;text-align:center;">خطأ: ${error.message}</p>`; }
+            const snap = await getDocs(query(collection(db, "notes")));
+            currentNotes = []; snap.forEach(d => currentNotes.push({ id: d.id, ...d.data() }));
+            currentNotes.sort((a, b) => {
+                if ((a.isPinned?1:0) !== (b.isPinned?1:0)) return (b.isPinned?1:0) - (a.isPinned?1:0);
+                return (b.order || 0) - (a.order || 0); 
+            });
+            renderNotes();
         }
 
-        function renderNotesList() {
+        function renderNotes() {
             notesContainer.innerHTML = '';
-            let filteredNotes = currentNotes;
-            if (searchTerm) {
-                filteredNotes = currentNotes.filter(n => (n.text || '').toLowerCase().includes(searchTerm));
-            }
+            let filtered = currentNotes.filter(n => !searchTerm || (n.text||'').toLowerCase().includes(searchTerm));
+            
+            if (!filtered.length) { notesContainer.innerHTML = '<p style="text-align:center;">لا توجد ملاحظات</p>'; return; }
 
-            if (filteredNotes.length === 0) {
-                notesContainer.innerHTML = '<p style="text-align:center;color:#94a3b8;padding:20px;">لا توجد ملاحظات مطابقة</p>';
-                return;
-            }
-
-            filteredNotes.forEach((note, index) => {
-                const data = note, docId = note.id, isPinned = data.isPinned || false;
-                const isFirst = index === 0, isLast = index === filteredNotes.length - 1;
-
-                let dateStr = 'تاريخ غير محدد';
-                try {
-                    const d = data.timestamp?.toDate ? data.timestamp.toDate() : new Date(data.timestamp);
-                    dateStr = d.toLocaleString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-                } catch (e) {}
-                const textContent = data.text || 'ملاحظة فارغة';
+            filtered.forEach((n, i) => {
+                let date = new Date(n.timestamp || 0).toLocaleString('ar-EG');
+                let atts = (n.attachments||[]).map(a => a.type.startsWith('image') ? `<img src="${a.data}" style="max-width:100%;max-height:200px;border-radius:5px;margin-top:5px;">` : `<audio controls src="${a.data}" style="width:100%;margin-top:5px;"></audio>`).join('');
                 
-                const card = document.createElement('div');
-                card.className = `note-card ${isPinned ? 'pinned' : ''}`;
-                
-                const header = document.createElement('div');
-                header.className = 'note-header';
-                header.innerHTML = `<span>${isPinned ? '<span class="pin-indicator">📌</span>' : ''}📅 ${dateStr}</span>`;
-                card.appendChild(header);
-                
-                const textEl = document.createElement('div');
-                textEl.className = 'note-text'; textEl.textContent = textContent;
-                card.appendChild(textEl);
-                
-                const attachments = data.attachments || [];
-                if (attachments.length > 0) {
-                    const attDiv = document.createElement('div');
-                    attDiv.className = 'note-attachments';
-                    attachments.forEach(file => {
-                        const src = file.data || file.url;
-                        if (!src) return;
-                        if (file.type?.startsWith('image/')) {
-                            const img = document.createElement('img');
-                            img.src = src; img.className = 'note-attachment-image'; img.alt = file.name || 'صورة';
-                            img.addEventListener('click', () => { const w = window.open(); w.document.write(`<img src="${src}" style="max-width:100%;max-height:100vh;">`); });
-                            attDiv.appendChild(img);
-                        } else if (file.type?.startsWith('audio/')) {
-                            const audio = document.createElement('audio');
-                            audio.controls = true; audio.src = src; audio.className = 'note-attachment-audio';
-                            attDiv.appendChild(audio);
-                        }
-                    });
-                    if (attDiv.children.length > 0) card.appendChild(attDiv);
-                }
-                
-                const btnGroup = document.createElement('div');
-                btnGroup.className = 'btn-group';
-
-                const editBtn = document.createElement('button');
-                editBtn.className = 'action-btn edit-btn'; editBtn.innerHTML = '✏️ تعديل';
-                editBtn.addEventListener('click', () => {
-                    noteInput.value = textContent; editingAttachments = data.attachments || []; selectedFiles = []; renderSelectedFiles();
-                    saveBtn.textContent = '✅ تحديث الملاحظة'; saveBtn.classList.add('update-mode'); setButtonColor('green'); editingDocId = docId;
-                    noteInput.scrollIntoView({ behavior: 'smooth', block: 'center' }); noteInput.focus(); showStatus('✏️ جارٍ التعديل...', 'info');
-                });
-
-                const pinBtn = document.createElement('button');
-                pinBtn.className = `action-btn pin-btn ${isPinned ? 'active' : ''}`; pinBtn.innerHTML = isPinned ? '📌 مثبتة' : '📌 تثبيت';
-                pinBtn.addEventListener('click', async () => {
-                    const newOrder = isPinned ? 0 : (Date.now()); 
-                    await updateNoteOrder(docId, { isPinned: !isPinned, order: newOrder });
-                });
-
-                const moveUpBtn = document.createElement('button');
-                moveUpBtn.className = 'action-btn move-btn'; moveUpBtn.innerHTML = '⬆️ رفع';
-                if (isFirst && !searchTerm) moveUpBtn.disabled = true;
-                moveUpBtn.addEventListener('click', async () => {
-                    const originalIndex = currentNotes.findIndex(n => n.id === docId);
-                    if (originalIndex > 0) {
-                        const prevNote = currentNotes[originalIndex - 1];
-                        await updateNoteOrder(docId, { order: (prevNote.order || 0) + 1, isPinned: prevNote.isPinned || false });
-                    }
-                });
-
-                const moveDownBtn = document.createElement('button');
-                moveDownBtn.className = 'action-btn move-btn'; moveDownBtn.innerHTML = '⬇️ إنزال';
-                if (isLast && !searchTerm) moveDownBtn.disabled = true;
-                moveDownBtn.addEventListener('click', async () => {
-                    const originalIndex = currentNotes.findIndex(n => n.id === docId);
-                    if (originalIndex < currentNotes.length - 1) {
-                        const nextNote = currentNotes[originalIndex + 1];
-                        await updateNoteOrder(docId, { order: (nextNote.order || 0) - 1, isPinned: nextNote.isPinned || false });
-                    }
-                });
-
-                const copyBtn = document.createElement('button');
-                copyBtn.className = 'action-btn copy-btn'; copyBtn.innerHTML = '📋 نسخ';
-                copyBtn.addEventListener('click', async () => {
-                    try {
-                        await navigator.clipboard.writeText(textContent);
-                        const originalText = copyBtn.innerHTML; copyBtn.innerHTML = '✅ تم النسخ!'; copyBtn.classList.add('copied');
-                        setTimeout(() => { copyBtn.innerHTML = originalText; copyBtn.classList.remove('copied'); }, 2000);
-                    } catch (err) { alert('❌ تعذر النسخ تلقائياً.'); }
-                });
-
-                const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'action-btn delete-btn'; deleteBtn.innerHTML = '🗑️ حذف';
-                deleteBtn.addEventListener('click', async () => {
-                    if (!confirm('هل أنت متأكد من حذف هذه الملاحظة نهائياً؟')) return;
-                    try {
-                        showStatus('⏳ جاري الحذف...', 'info');
-                        await deleteDoc(doc(db, "notes", docId));
-                        showStatus('✅ تم الحذف بنجاح!', 'ok'); await fetchNotes(); setTimeout(() => showStatus(''), 2500);
-                    } catch (error) { showStatus('❌ خطأ في الحذف: ' + error.message, 'err'); }
-                });
-
-                btnGroup.appendChild(editBtn); btnGroup.appendChild(pinBtn); btnGroup.appendChild(moveUpBtn); btnGroup.appendChild(moveDownBtn); btnGroup.appendChild(copyBtn); btnGroup.appendChild(deleteBtn);
-                card.appendChild(btnGroup); notesContainer.appendChild(card);
+                let card = document.createElement('div');
+                card.className = `note-card ${n.isPinned?'pinned':''}`;
+                card.innerHTML = `
+                    <div class="note-header">${n.isPinned?'📌':''} 📅 ${date}</div>
+                    <div class="note-text">${n.text}</div>
+                    <div>${atts}</div>
+                    <div class="btn-group" style="margin-top:10px;">
+                        <button class="action-btn" onclick="window.editNote('${n.id}')">✏️ تعديل</button>
+                        <button class="action-btn" onclick="window.pinNote('${n.id}', ${n.isPinned})">${n.isPinned?'📌 إلغاء':'📌 تثبيت'}</button>
+                        <button class="action-btn" onclick="window.moveNote('${n.id}', 1)">⬆️ رفع</button>
+                        <button class="action-btn" onclick="window.moveNote('${n.id}', -1)">⬇️ إنزال</button>
+                        <button class="action-btn" onclick="navigator.clipboard.writeText('${(n.text||'').replace(/'/g,"\\'")}'); alert('تم النسخ');">📋 نسخ</button>
+                        <button class="action-btn" style="background:#f5d5d5;color:red;" onclick="window.deleteNote('${n.id}')">🗑️ حذف</button>
+                    </div>
+                `;
+                notesContainer.appendChild(card);
             });
         }
 
-        function estimateDocumentSize(text, attachments) {
-            let size = text.length;
-            attachments.forEach(a => { size += (a.data || '').length + (a.name || '').length + (a.type || '').length; });
-            return size;
-        }
+        window.editNote = (id) => {
+            const n = currentNotes.find(x => x.id === id);
+            noteInput.value = n.text || '';
+            editingDocId = id;
+            saveBtn.innerText = '✅ تحديث الملاحظة';
+            saveBtn.style.color = '#5d8a3e'; saveBtn.style.borderColor = '#5d8a3e'; saveBtn.style.background = '#d9e8cc';
+            noteInput.scrollIntoView({behavior:'smooth',block:'center'});
+        };
+        window.deleteNote = async (id) => { if(confirm('حذف نهائي؟')) { await deleteDoc(doc(db,"notes",id)); fetchNotes(); } };
+        window.pinNote = async (id, p) => { await updateDoc(doc(db,"notes",id), { isPinned: !p, order: Date.now() }); fetchNotes(); };
+        window.moveNote = async (id, dir) => {
+            const idx = currentNotes.findIndex(x => x.id === id);
+            if (dir === 1 && idx > 0) { await updateDoc(doc(db,"notes",id), { order: (currentNotes[idx-1].order||0) + 1 }); }
+            if (dir === -1 && idx < currentNotes.length-1) { await updateDoc(doc(db,"notes",id), { order: (currentNotes[idx+1].order||0) - 1 }); }
+            fetchNotes();
+        };
 
-        saveBtn.addEventListener('click', async () => {
-            const noteText = noteInput.value.trim();
-            if (!noteText && selectedFiles.length === 0 && editingAttachments.length === 0) {
-                showStatus('⚠️ اكتب ملاحظة أو أضف صورة/ملف صوتي أولاً!', 'err'); setButtonColor('red'); return;
+        saveBtn.onclick = async () => {
+            const text = noteInput.value.trim();
+            if (!text && !selectedFiles.length) return showStatus('⚠️ اكتب شيئاً!', 'red');
+            
+            showStatus('⏳ جاري الحفظ...');
+            if (editingDocId) {
+                await updateDoc(doc(db,"notes",editingDocId), { text, attachments: selectedFiles, timestamp: Date.now() });
+            } else {
+                await setDoc(doc(collection(db,"notes")), { text, attachments: selectedFiles, timestamp: Date.now(), isPinned: false, order: Date.now() });
             }
-            try {
-                if (editingDocId) {
-                    const allAtt = [...editingAttachments, ...selectedFiles];
-                    if (estimateDocumentSize(noteText, allAtt) > FIRESTORE_LIMIT) { showStatus(`❌ الحجم كبير جداً.`, 'err'); return; }
-                    showStatus('⏳ جاري تحديث الملاحظة...', 'info');
-                    
-                    const existingNote = currentNotes.find(n => n.id === editingDocId);
-                    await updateDoc(doc(db, "notes", editingDocId), {
-                        text: noteText, attachments: allAtt, timestamp: new Date(),
-                        isPinned: existingNote ? existingNote.isPinned : false,
-                        order: existingNote ? (existingNote.order || 0) : Date.now()
-                    });
-
-                    showStatus('✅ تم تحديث الملاحظة!', 'ok');
-                    saveBtn.textContent = '💾 حفظ على السحابة'; saveBtn.classList.remove('update-mode'); setButtonColor('green');
-                    editingDocId = null; editingAttachments = []; selectedFiles = []; noteInput.value = ''; renderSelectedFiles();
-                } else {
-                    if (estimateDocumentSize(noteText, selectedFiles) > FIRESTORE_LIMIT) { showStatus(`❌ الحجم كبير جداً.`, 'err'); return; }
-                    showStatus('⏳ جاري حفظ الملاحظة...', 'info');
-                    
-                    await setDoc(doc(collection(db, "notes")), {
-                        text: noteText, attachments: selectedFiles, timestamp: new Date(),
-                        isPinned: false, order: Date.now()
-                    });
-                    
-                    showStatus('✅ تم الحفظ بنجاح!', 'ok'); setButtonColor('green');
-                    selectedFiles = []; noteInput.value = ''; renderSelectedFiles();
-                }
-                await fetchNotes();
-                setTimeout(() => { if (!editingDocId) { setButtonColor('red'); saveBtn.textContent = '💾 حفظ على السحابة'; } }, 3000);
-            } catch (e) { showStatus('❌ حدث خطأ: ' + e.message, 'err'); setButtonColor('red'); }
-        });
-
-        noteInput.addEventListener('input', () => { if (noteInput.value.trim().length > 0) setButtonColor('red'); });
-
-        noteInput.addEventListener('paste', async (event) => {
-            const items = (event.clipboardData || event.originalEvent.clipboardData).items;
-            let hasImage = false;
-            for (const item of items) {
-                if (item.type.indexOf('image') !== -1) {
-                    hasImage = true; const file = item.getAsFile();
-                    if (file) await processFiles([file], 'image');
-                }
-            }
-            if (hasImage) { event.preventDefault(); showStatus('🖼️ تم لصق الصورة!', 'ok'); setTimeout(() => showStatus(''), 3000); }
-        });
+            
+            noteInput.value = ''; selectedFiles = []; renderSelected(); editingDocId = null;
+            saveBtn.innerText = '💾 حفظ على السحابة'; saveBtn.style.color = '#a83232'; saveBtn.style.borderColor = '#a83232'; saveBtn.style.background = '#f5d5d5';
+            showStatus('✅ تم الحفظ!', '#5d8a3e');
+            fetchNotes();
+        };
 
         /* التصدير والاستيراد */
-        exportBtn.addEventListener('click', exportNotes);
-        async function exportNotes() {
+        document.getElementById('exportBtn').onclick = async () => {
+            const snap = await getDocs(query(collection(db, "notes")));
+            const data = []; snap.forEach(d => data.push(d.data()));
+            const blob = new Blob([JSON.stringify({notes: data}, null, 2)], {type:'application/json'});
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'notes-backup.json'; a.click();
+            showStatus('✅ تم التصدير!', '#5d8a3e');
+        };
+        document.getElementById('importBtn').onclick = () => document.getElementById('importInput').click();
+        document.getElementById('importInput').onchange = async (e) => {
+            const file = e.target.files[0]; if(!file) return;
+            const text = await file.text();
             try {
-                exportBtn.disabled = true; showStatus('⏳ جاري تجهيز النسخة...', 'info');
-                const snap = await getDocs(query(collection(db, "notes")));
-                const notes = [];
-                snap.forEach(d => { const data = d.data(); notes.push({ id: d.id, text: data.text || "", attachments: data.attachments || [], timestamp: data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : data.timestamp, isPinned: data.isPinned || false, order: data.order || 0 }); });
-
-                if (notes.length === 0) { showStatus('⚠️ لا توجد ملاحظات.', 'err'); return; }
-                const blob = new Blob([JSON.stringify({ app: 'cloud-notebook', version: 2, exportedAt: new Date().toISOString(), notes }, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob); const a = document.createElement('a');
-                a.href = url; a.download = `notes-backup-${new Date().toISOString().slice(0,10)}.json`;
-                document.body.appendChild(a); a.click(); document.body.removeChild(a);
-                setTimeout(() => URL.revokeObjectURL(url), 4000);
-                showStatus(`✅ تم تصدير ${notes.length} ملاحظة.`, 'ok'); setTimeout(() => showStatus(''), 5000);
-            } catch (error) { showStatus('❌ فشل التصدير: ' + error.message, 'err'); } finally { exportBtn.disabled = false; }
-        }
-
-        importBtn.addEventListener('click', () => importInput.click());
-        importInput.addEventListener('change', async () => {
-            const file = importInput.files && importInput.files[0]; importInput.value = '';
-            if (file) await importNotesFromFile(file);
-        });
-
-        async function importNotesFromFile(file) {
-            try {
-                importBtn.disabled = true; showStatus('⏳ جاري قراءة الملف...', 'info');
-                const raw = await file.text(); let payload = JSON.parse(raw);
-                let incoming = Array.isArray(payload) ? payload : (payload && Array.isArray(payload.notes) ? payload.notes : null);
-                if (!incoming || incoming.length === 0) throw new Error('الملف لا يحتوي على ملاحظات.');
-                if (!confirm(`📥 تم العثور على ${incoming.length} ملاحظة. متابعة؟`)) { showStatus('↩️ تم الإلغاء.', 'info'); setTimeout(() => showStatus(''), 2500); return; }
-
-                let added = 0, failed = 0;
-                for (let i = 0; i < incoming.length; i++) {
-                    const n = incoming[i];
-                    try {
-                        const text = (n.text || '').toString();
-                        const attachments = Array.isArray(n.attachments) ? n.attachments.filter(a => a && (a.data || a.url)).map(a => ({ name: a.name || 'ملف', type: a.type || '', size: a.size || 0, data: a.data || a.url || '' })) : [];
-                        if (!text.trim() && attachments.length === 0) continue;
-                        if (estimateDocumentSize(text, attachments) > FIRESTORE_LIMIT) { failed++; continue; }
-
-                        let ts = new Date(); if (n.timestamp) { const d = new Date(n.timestamp); if (!isNaN(d.getTime())) ts = d; }
-                        const isPinned = n.isPinned || false; const order = n.order || Date.now() + i;
-
-                        const cleanNote = { text: text, attachments: attachments, timestamp: ts, isPinned: isPinned === true ? true : false, order: order || Date.now() };
-                        await setDoc(doc(collection(db, "notes")), cleanNote); added++;
-                    } catch (err) { failed++; }
-                    showStatus(`⏳ جاري الاستيراد... (${i + 1}/${incoming.length}) — ✅ ${added} • ❌ ${failed}`, 'info');
+                const json = JSON.parse(text);
+                const list = json.notes || json;
+                for (let n of list) {
+                    await setDoc(doc(collection(db,"notes")), {
+                        text: (n.text||'').toString(), attachments: n.attachments||[], timestamp: n.timestamp||Date.now(), isPinned: n.isPinned||false, order: n.order||Date.now()
+                    });
                 }
-
-                await fetchNotes();
-                if (added > 0 && !isVisible) { isVisible = true; notesList.classList.add('visible'); toggleBtn.textContent = '📂 إخفاء الفهرس'; }
-                showStatus(`✅ تم الاستيراد: ${added} ملاحظة` + (failed ? ` • فشل ${failed}` : ''), failed > 0 ? 'info' : 'ok');
-                setTimeout(() => showStatus(''), 7000);
-            } catch (error) { showStatus('❌ فشل الاستيراد: ' + error.message, 'err'); } finally { importBtn.disabled = false; }
-        }
+                fetchNotes(); showStatus('✅ تم الاستيراد!', '#5d8a3e');
+            } catch (err) { showStatus('❌ خطأ في الملف', 'red'); }
+        };
 
         fetchNotes();
     </script>
