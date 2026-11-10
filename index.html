@@ -22,7 +22,7 @@
     .note-card.pinned { border: 2px solid #d4af37; background: #fffdf5; }
     .note-header { font-size: 12px; color: #666; margin-bottom: 8px; border-bottom: 1px dashed var(--border); padding-bottom: 5px; }
     .note-text { margin-bottom: 12px; white-space: pre-wrap; line-height: 1.6; }
-    .btn-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 5px; }
+    .btn-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 5px; }
     .action-btn { padding: 8px; font-size: 12px; border-radius: 4px; border: 1px solid var(--border); background: white; cursor: pointer; font-weight: bold; }
     .action-btn:hover { background: #eee; }
     .delete-btn { color: red; background: #fce4e4; }
@@ -68,13 +68,9 @@
 
     const $ = id => document.getElementById(id);
 
-    // دالة البحث
     $('searchInput').oninput = e => { search = e.target.value.toLowerCase(); render(); };
-
-    // فتح وإغلاق الفهرس
     $('toggleIndexBtn').onclick = () => { $('notesList').classList.toggle('visible'); $('toggleIndexBtn').innerText = $('notesList').classList.contains('visible') ? '📂 إخفاء الفهرس' : '📂 إظهار الفهرس'; };
-
-    // أزرار التمرير
+    
     window.scrollFirst = () => { const f = document.querySelector('.note-card'); if(f) f.scrollIntoView({behavior:'smooth', block:'center'}); };
     window.scrollLast = () => { const a = document.querySelectorAll('.note-card'); if(a.length) a[a.length-1].scrollIntoView({behavior:'smooth', block:'center'}); };
 
@@ -83,7 +79,6 @@
         notes = [];
         s.forEach(d => notes.push({id: d.id, ...d.data()}));
         
-        // الترتيب: المثبتة أولاً، ثم الأحدث (بناءً على الرقم order)
         notes.sort((a, b) => {
             if (a.isPinned && !b.isPinned) return -1;
             if (!a.isPinned && b.isPinned) return 1;
@@ -101,14 +96,13 @@
             <div class="btn-group">
                 <button class="action-btn" onclick="window.edit('${n.id}')">✏️ تعديل</button>
                 <button class="action-btn" onclick="window.pin('${n.id}', ${n.isPinned || false})">${n.isPinned ? '📌 إلغاء' : '📌 تثبيت'}</button>
-                <button class="action-btn" onclick="window.move('${n.id}', 1)">⬆️ رفع</button>
-                <button class="action-btn" onclick="window.move('${n.id}', -1)">⬇️ إنزال</button>
+                <button class="action-btn" onclick="window.moveToTop('${n.id}')">⬆️ للأعلى</button>
+                <button class="action-btn" onclick="window.moveToBottom('${n.id}')">⬇️ للأسفل</button>
                 <button class="action-btn delete-btn" onclick="window.del('${n.id}')">🗑️ حذف</button>
             </div>
         </div>`).join('') || '<p style="text-align:center">لا توجد ملاحظات</p>';
     }
 
-    // دالة الحفظ
     $('saveBtn').onclick = async () => {
         const t = $('noteInput').value.trim();
         if(!t) return;
@@ -116,7 +110,6 @@
             await setDoc(doc(db, "notes", editId), {text: t, timestamp: Date.now()}, {merge: true});
             editId = null; $('saveBtn').innerText = '💾 حفظ على السحابة';
         } else {
-            // هنا نضع Date.now() لتظهر الملاحظة الجديدة في الأعلى فوراً
             await setDoc(doc(collection(db, "notes")), {text: t, timestamp: Date.now(), isPinned: false, order: Date.now()});
         }
         $('noteInput').value = ''; load();
@@ -126,22 +119,25 @@
     window.pin = async (id, p) => { await setDoc(doc(db, "notes", id), {isPinned: !p, order: Date.now()}, {merge: true}); load(); };
     window.edit = (id) => { const n = notes.find(x => x.id === id); $('noteInput').value = n.text; editId = id; $('saveBtn').innerText = '✏️ تحديث'; $('noteInput').scrollIntoView({behavior:'smooth'}); };
 
-    // دالة الرفع والإنزال
-    window.move = async (id, dir) => {
-        const i = notes.findIndex(x => x.id === id);
-        if(dir === 1 && i > 0) {
-            await setDoc(doc(db, "notes", id), {order: (notes[i-1].order || 0) + 1}, {merge: true});
-        } else if(dir === -1 && i < notes.length - 1) {
-            await setDoc(doc(db, "notes", id), {order: (notes[i+1].order || 0) - 1}, {merge: true});
-        }
+    // 🟢 دالة الرفع إلى أعلى القائمة تماماً
+    window.moveToTop = async (id) => {
+        const maxOrder = notes.reduce((max, n) => Math.max(max, n.order || 0), 0);
+        await setDoc(doc(db, "notes", id), { order: maxOrder + 1000, isPinned: false }, { merge: true });
         load();
     };
 
-    // التصدير والاستيراد
+    // 🔴 دالة الإنزال إلى أسفل القائمة تماماً
+    window.moveToBottom = async (id) => {
+        const minOrder = notes.reduce((min, n) => Math.min(min, n.order || 0), Date.now());
+        await setDoc(doc(db, "notes", id), { order: minOrder - 1000, isPinned: false }, { merge: true });
+        load();
+    };
+
     $('exportBtn').onclick = () => {
         const b = new Blob([JSON.stringify(notes)], {type: 'application/json'});
         const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = 'notes.json'; a.click();
     };
+    
     $('importBtn').onclick = () => $('importInput').click();
     $('importInput').onchange = async (e) => {
         const f = e.target.files[0]; if(!f) return;
