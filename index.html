@@ -5,51 +5,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>دفتر الملاحظات السحابي</title>
 <style>
-    :root { --bg: #f4e4bc; --card: #faf0d7; --border: #c9a961; --text: #3e2c1c; --primary: #8b5a2b; }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: 'Georgia', 'Amiri', serif; background: #5d4a35; color: var(--text); padding: 20px; padding-bottom: 100px; }
-    .container { max-width: 800px; margin: 0 auto; background: var(--bg); padding: 30px; border-radius: 8px; border: 2px solid #a8845a; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
-    h2 { text-align: center; margin-bottom: 20px; border-bottom: 2px double var(--border); padding-bottom: 15px; }
-    textarea { width: 100%; height: 120px; padding: 15px; border: 2px solid var(--border); border-radius: 6px; font-family: inherit; background: var(--card); resize: vertical; }
-    #saveBtn { background: var(--primary); color: white; width: 100%; padding: 12px; margin-top: 10px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; }
+    /* خلفية زرقاء للتأكد من التحديث */
+    body { font-family: 'Georgia', 'Amiri', serif; background: #1a365d; color: #3e2c1c; padding: 20px; padding-bottom: 100px; }
+    .container { max-width: 800px; margin: 0 auto; background: #f4e4bc; padding: 30px; border-radius: 8px; border: 2px solid #a8845a; box-shadow: 0 10px 30px rgba(0,0,0,.5); }
+    h2 { text-align: center; margin-bottom: 20px; border-bottom: 2px double #c9a961; padding-bottom: 15px; }
+    textarea { width: 100%; height: 120px; padding: 15px; border: 2px solid #c9a961; border-radius: 6px; font-family: inherit; background: #faf0d7; resize: vertical; }
+    #saveBtn { background: #8b5a2b; color: white; width: 100%; padding: 12px; margin-top: 10px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer; font-weight: bold; }
     .backup-box { display: flex; gap: 10px; margin-top: 15px; }
-    .backup-btn { flex: 1; padding: 10px; border-radius: 6px; border: 2px solid var(--border); background: var(--card); cursor: pointer; font-weight: bold; }
+    .backup-btn { flex: 1; padding: 10px; border-radius: 6px; border: 2px solid #c9a961; background: #faf0d7; cursor: pointer; font-weight: bold; }
     .toggle-index-btn { width: 100%; margin-top: 15px; padding: 10px; background: #3e2c1c; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; }
-    .notes-list { display: none; margin-top: 15px; border-top: 2px solid var(--border); padding-top: 15px; }
+    .notes-list { display: none; margin-top: 15px; border-top: 2px solid #c9a961; padding-top: 15px; }
     .notes-list.visible { display: block; }
-    .search-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid var(--border); border-radius: 6px; font-family: inherit; background: white; }
-    
-    #tocContainer {
-        background: #fffaf0; border: 2px solid var(--primary); border-radius: 6px; 
-        padding: 10px; margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 8px; 
-        max-height: 120px; overflow-y: scroll; box-shadow: inset 0 0 5px rgba(0,0,0,0.2);
-    }
-    .toc-item { background: #e8dcc0; color: var(--primary); padding: 5px 10px; border-radius: 4px; font-size: 13px; cursor: pointer; text-decoration: none; border: 1px solid #c9a961; font-weight: bold; }
-    .toc-item:hover { background: var(--primary); color: white; }
-
-    .note-card { background: var(--card); padding: 15px; margin-bottom: 15px; border-radius: 6px; border: 1px solid var(--border); scroll-margin-top: 20px; }
+    .search-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid #c9a961; border-radius: 6px; font-family: inherit; background: white; }
+    #tocContainer { background: #fffaf0; border: 2px solid #8b5a2b; border-radius: 6px; padding: 10px; margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 8px; max-height: 120px; overflow-y: scroll; }
+    .toc-item { background: #e8dcc0; color: #8b5a2b; padding: 5px 10px; border-radius: 4px; font-size: 13px; cursor: pointer; text-decoration: none; border: 1px solid #c9a961; font-weight: bold; }
+    .note-card { background: #faf0d7; padding: 15px; margin-bottom: 15px; border-radius: 6px; border: 1px solid #c9a961; }
     .note-card.pinned { border: 2px solid #d4af37; background: #fffdf5; }
-    .note-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px dashed var(--border); padding-bottom: 8px; }
-    .note-title-input { font-size: 15px; font-weight: bold; color: var(--primary); border: none; background: transparent; width: 70%; outline: none; border-bottom: 1px solid transparent; }
-    .note-title-input:focus { border-bottom: 1px solid var(--primary); }
+    .note-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px dashed #c9a961; padding-bottom: 8px; }
+    .note-title-input { font-size: 15px; font-weight: bold; color: #8b5a2b; border: none; background: transparent; width: 70%; outline: none; }
     
-    /* 🔥 التصميم الجديد (الأقوى) للرقم الذهبي 🔥 */
-    .gold-circle-number { 
-        font-size: 18px; 
-        font-weight: bold; 
-        color: #ffffff !important; 
-        background: #d4af37 !important; 
-        padding: 3px 12px; 
-        border-radius: 50%; 
-        border: 2px solid #8b5a2b !important; 
-        box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important; 
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.6) !important; 
+    /* 🚨 الدائرة الذهبية 🚨 */
+    .gold-number {
+        font-size: 20px;
+        font-weight: bold;
+        color: #ffffff;
+        background-color: #d4af37; /* ذهبي صريح */
+        padding: 5px 15px;
+        border-radius: 50%;
+        border: 2px solid #8b5a2b;
+        box-shadow: 0 0 10px #d4af37;
     }
 
     .note-text { margin-bottom: 12px; white-space: pre-wrap; line-height: 1.6; }
     .btn-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 5px; }
-    .action-btn { padding: 8px; font-size: 12px; border-radius: 4px; border: 1px solid var(--border); background: white; cursor: pointer; font-weight: bold; }
-    .action-btn:hover { background: #eee; }
+    .action-btn { padding: 8px; font-size: 12px; border-radius: 4px; border: 1px solid #c9a961; background: white; cursor: pointer; font-weight: bold; }
     .delete-btn { color: red; background: #fce4e4; }
     .floating { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; background: #333; padding: 10px; border-radius: 30px; z-index: 999; }
     .floating button { width: 40px; height: 40px; border-radius: 50%; border: none; font-size: 18px; cursor: pointer; background: #fff; }
@@ -72,9 +61,7 @@
 
     <div class="notes-list" id="notesList">
         <div class="search-box"><input type="text" id="searchInput" placeholder="🔍 ابحث في الملاحظات..."></div>
-        
         <div id="tocContainer"></div>
-        
         <div id="notesContainer">⏳ جاري التحميل...</div>
     </div>
 </div>
@@ -118,7 +105,6 @@
 
     function render() {
         let f = notes.filter(n => (n.text || '').toLowerCase().includes(search));
-        
         let tocHtml = '';
         let notesHtml = '';
 
@@ -132,7 +118,7 @@
             <div class="note-card ${n.isPinned ? 'pinned' : ''}" id="note_${n.id}">
                 <div class="note-header">
                     <input type="text" class="note-title-input" value="${title}" onchange="window.updateTitle('${n.id}', this.value)" placeholder="اسم الملاحظة...">
-                    <span class="gold-circle-number">${num}</span>
+                    <span class="gold-number">${num}</span>
                 </div>
                 <div class="note-text">${n.text || ''}</div>
                 <div class="btn-group">
