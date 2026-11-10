@@ -1,147 +1,193 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>دفتر الملاحظات</title>
+<style>
+    body { font-family: Arial, sans-serif; background: #f4e4bc; padding: 20px; }
+    .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
+    h2 { text-align: center; }
+    textarea { width: 100%; height: 100px; padding: 10px; box-sizing: border-box; margin-bottom: 10px; }
+    button { padding: 10px; margin: 5px 0; cursor: pointer; width: 100%; background: #ddd; border: 1px solid #aaa; border-radius: 5px; font-weight: bold; }
+    input[type="text"] { width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box; }
+    .note { background: #f9f9f9; padding: 15px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; }
+    .note.pinned { border: 2px solid gold; background: #fffdf5; }
+    .actions { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 10px; }
+    .actions button { width: auto; padding: 5px 10px; font-size: 12px; margin: 0; }
+    .hidden { display: none; }
+    .floating { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; background: #333; padding: 10px; border-radius: 30px; }
+    .floating button { width: 40px; height: 40px; border-radius: 50%; padding: 0; background: white; }
+</style>
+</head>
+<body>
+<div class="container">
+    <h2>دفتر الملاحظات</h2>
+    <textarea id="noteInput" placeholder="اكتب ملاحظتك هنا..."></textarea>
+    <button onclick="saveNote()">💾 حفظ</button>
+    <button onclick="toggleList()">📂 إظهار/إخفاء الملاحظات</button>
+    
+    <div id="listArea" class="hidden" style="margin-top:20px;">
+        <input type="text" id="searchInput" placeholder="🔍 ابحث..." oninput="renderNotes()">
+        <div id="notesContainer"></div>
+    </div>
+</div>
+
+<div class="floating">
+    <button onclick="window.scrollTo(0,0)">⬆️</button>
+    <button onclick="goFirst()">🔝</button>
+    <button onclick="goLast()">🔚</button>
+    <button onclick="window.scrollTo(0,document.body.scrollHeight)">⬇️</button>
+</div>
+
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyBrXDy3FuN6YJlIYTWCD_TsfMvkmiWZiLo",
-    authDomain: "hassanmedication.firebaseapp.com",
-    projectId: "hassanmedication",
-    storageBucket: "hassanmedication.firebasestorage.app",
-    messagingSenderId: "1023452446639",
-    appId: "1:1023452446639:web:dedf54f7ff5c4c93d9795a"
-};
+    const firebaseConfig = {
+        apiKey: "AIzaSyBrXDy3FuN6YJlIYTWCD_TsfMvkmiWZiLo",
+        authDomain: "hassanmedication.firebaseapp.com",
+        projectId: "hassanmedication",
+        storageBucket: "hassanmedication.firebasestorage.app",
+        messagingSenderId: "1023452446639",
+        appId: "1:1023452446639:web:dedf54f7ff5c4c93d9795a"
+    };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-let notes = [];
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    let notes = [];
 
-async function loadNotes() {
-    const snap = await getDocs(collection(db, "notes"));
-    notes = [];
-    snap.forEach(d => notes.push({ id: d.id, ...d.data() }));
-    notes.sort((a, b) => {
-        if (a.isPinned && !b.isPinned) return -1;
-        if (!a.isPinned && b.isPinned) return 1;
-        return (b.order || 0) - (a.order || 0);
-    });
-    renderNotes();
-}
-
-function renderNotes() {
-    const container = document.getElementById('notesDiv');
-    const term = document.getElementById('searchBox').value.toLowerCase();
-    const filtered = notes.filter(n => (n.text||'').toLowerCase().includes(term));
-
-    if (filtered.length === 0) {
-        container.innerHTML = '<p style="text-align:center;">لا توجد ملاحظات</p>';
-        return;
+    async function loadNotes() {
+        const snap = await getDocs(collection(db, "notes"));
+        notes = [];
+        snap.forEach(d => notes.push({ id: d.id, ...d.data() }));
+        notes.sort((a, b) => {
+            if (a.isPinned && !b.isPinned) return -1;
+            if (!a.isPinned && b.isPinned) return 1;
+            return (b.order || 0) - (a.order || 0);
+        });
+        renderNotes();
     }
 
-    container.innerHTML = filtered.map(n => `
-        <div class="note ${n.isPinned ? 'pinned' : ''}">
-            <p>${n.text || ''}</p>
-            <div class="actions">
-                <button onclick="editNote('${n.id}')">✏️ تعديل</button>
-                <button onclick="pinNote('${n.id}', ${n.isPinned || false})">${n.isPinned ? '📌 إلغاء' : '📌 تثبيت'}</button>
-                <button onclick="moveNote('${n.id}', 1)">⬆️ رفع</button>
-                <button onclick="moveNote('${n.id}', -1)">⬇️ إنزال</button>
-                <button onclick="deleteNote('${n.id}')" style="color:red;">🗑️ حذف</button>
+    function renderNotes() {
+        const container = document.getElementById('notesContainer');
+        const term = document.getElementById('searchInput').value.toLowerCase();
+        const filtered = notes.filter(n => (n.text || '').toLowerCase().includes(term));
+
+        if (filtered.length === 0) {
+            container.innerHTML = '<p>لا توجد ملاحظات.</p>';
+            return;
+        }
+
+        container.innerHTML = filtered.map(n => `
+            <div class="note ${n.isPinned ? 'pinned' : ''}">
+                <p>${n.text || ''}</p>
+                <div class="actions">
+                    <button onclick="editNote('${n.id}')">✏️ تعديل</button>
+                    <button onclick="pinNote('${n.id}', ${n.isPinned || false})">${n.isPinned ? '📌 إلغاء' : '📌 تثبيت'}</button>
+                    <button onclick="moveNote('${n.id}', 1)">⬆️ رفع</button>
+                    <button onclick="moveNote('${n.id}', -1)">⬇️ إنزال</button>
+                    <button onclick="deleteNote('${n.id}')" style="color:red;">🗑️ حذف</button>
+                </div>
             </div>
-        </div>
-    `).join('');
-}
-
-window.saveNote = async () => {
-    const text = document.getElementById('textInput').value.trim();
-    if (!text) return alert('اكتب ملاحظة أولاً!');
-    await setDoc(doc(collection(db, "notes")), {
-        text: text, timestamp: Date.now(), isPinned: false, order: Date.now()
-    });
-    document.getElementById('textInput').value = '';
-    await loadNotes();
-    alert('تم الحفظ!');
-};
-
-window.deleteNote = async (id) => {
-    if (confirm('حذف الملاحظة؟')) {
-        await deleteDoc(doc(db, "notes", id));
-        await loadNotes();
+        `).join('');
     }
-};
 
-window.pinNote = async (id, currentPin) => {
-    await setDoc(doc(db, "notes", id), { isPinned: !currentPin }, { merge: true });
-    await loadNotes();
-};
-
-window.editNote = (id) => {
-    const note = notes.find(n => n.id === id);
-    document.getElementById('textInput').value = note.text;
-    document.getElementById('saveBtn').innerText = '✏️ تحديث';
-    document.getElementById('saveBtn').onclick = async () => {
-        const newText = document.getElementById('textInput').value.trim();
-        await setDoc(doc(db, "notes", id), { text: newText }, { merge: true });
-        document.getElementById('saveBtn').innerText = '💾 حفظ';
-        document.getElementById('saveBtn').onclick = window.saveNote;
-        document.getElementById('textInput').value = '';
+    window.saveNote = async () => {
+        const text = document.getElementById('noteInput').value.trim();
+        if (!text) return alert('اكتب ملاحظة!');
+        await setDoc(doc(collection(db, "notes")), {
+            text: text, timestamp: Date.now(), isPinned: false, order: Date.now()
+        });
+        document.getElementById('noteInput').value = '';
         await loadNotes();
-        alert('تم التحديث!');
     };
-};
 
-window.moveNote = async (id, dir) => {
-    const idx = notes.findIndex(n => n.id === id);
-    if (dir === 1 && idx > 0) {
-        await setDoc(doc(db, "notes", id), { order: (notes[idx-1].order || 0) + 1 }, { merge: true });
-    } else if (dir === -1 && idx < notes.length - 1) {
-        await setDoc(doc(db, "notes", id), { order: (notes[idx+1].order || 0) - 1 }, { merge: true });
-    }
-    await loadNotes();
-};
-
-window.toggleList = () => {
-    document.getElementById('listDiv').classList.toggle('hidden');
-};
-
-window.scrollFirst = () => {
-    const first = document.querySelector('.note');
-    if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
-};
-
-window.scrollLast = () => {
-    const all = document.querySelectorAll('.note');
-    if (all.length) all[all.length-1].scrollIntoView({ behavior: 'smooth', block: 'center' });
-};
-
-window.exportData = () => {
-    const blob = new Blob([JSON.stringify(notes, null, 2)], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = 'notes-backup.json';
-    a.click();
-};
-
-window.importData = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        try {
-            const data = JSON.parse(e.target.result);
-            const list = Array.isArray(data) ? data : (data.notes || []);
-            for (let n of list) {
-                await setDoc(doc(collection(db, "notes")), {
-                    text: n.text || '', timestamp: n.timestamp || Date.now(), isPinned: n.isPinned || false, order: n.order || Date.now()
-                });
-            }
+    window.deleteNote = async (id) => {
+        if (confirm('حذف الملاحظة؟')) {
+            await deleteDoc(doc(db, "notes", id));
             await loadNotes();
-            alert('تم الاستيراد بنجاح!');
-        } catch (err) { alert('خطأ في قراءة الملف'); }
+        }
     };
-    reader.readAsText(file);
-};
 
-loadNotes();
+    window.pinNote = async (id, currentPin) => {
+        await setDoc(doc(db, "notes", id), { isPinned: !currentPin }, { merge: true });
+        await loadNotes();
+    };
+
+    window.editNote = (id) => {
+        const note = notes.find(n => n.id === id);
+        document.getElementById('noteInput').value = note.text;
+        const saveBtn = document.querySelector('button[onclick="saveNote()"]');
+        saveBtn.innerText = '✏️ تحديث';
+        saveBtn.onclick = async () => {
+            const newText = document.getElementById('noteInput').value.trim();
+            await setDoc(doc(db, "notes", id), { text: newText }, { merge: true });
+            saveBtn.innerText = '💾 حفظ';
+            saveBtn.onclick = window.saveNote;
+            document.getElementById('noteInput').value = '';
+            await loadNotes();
+        };
+    };
+
+    window.moveNote = async (id, dir) => {
+        const idx = notes.findIndex(n => n.id === id);
+        if (dir === 1 && idx > 0) {
+            await setDoc(doc(db, "notes", id), { order: (notes[idx - 1].order || 0) + 1 }, { merge: true });
+        } else if (dir === -1 && idx < notes.length - 1) {
+            await setDoc(doc(db, "notes", id), { order: (notes[idx + 1].order || 0) - 1 }, { merge: true });
+        }
+        await loadNotes();
+    };
+
+    window.toggleList = () => {
+        document.getElementById('listArea').classList.toggle('hidden');
+    };
+
+    window.goFirst = () => {
+        const first = document.querySelector('.note');
+        if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+
+    window.goLast = () => {
+        const all = document.querySelectorAll('.note');
+        if (all.length) all[all.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
+    };
+
+    window.exportData = () => {
+        const blob = new Blob([JSON.stringify(notes, null, 2)], { type: 'application/json' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'notes-backup.json';
+        a.click();
+    };
+
+    window.importData = (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = async (e) => {
+            try {
+                const data = JSON.parse(e.target.result);
+                const list = Array.isArray(data) ? data : (data.notes || []);
+                for (let n of list) {
+                    await setDoc(doc(collection(db, "notes")), {
+                        text: n.text || '',
+                        timestamp: n.timestamp || Date.now(),
+                        isPinned: n.isPinned || false,
+                        order: n.order || Date.now()
+                    });
+                }
+                await loadNotes();
+                alert('تم الاستيراد!');
+            } catch (err) {
+                alert('خطأ في الملف');
+            }
+        };
+        reader.readAsText(file);
+    };
+
+    loadNotes();
 </script>
 </body>
 </html>
