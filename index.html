@@ -96,8 +96,8 @@
             <div class="btn-group">
                 <button class="action-btn" onclick="window.edit('${n.id}')">✏️ تعديل</button>
                 <button class="action-btn" onclick="window.pin('${n.id}', ${n.isPinned || false})">${n.isPinned ? '📌 إلغاء' : '📌 تثبيت'}</button>
-                <button class="action-btn" onclick="window.moveToTop('${n.id}')">⬆️ للأعلى</button>
-                <button class="action-btn" onclick="window.moveToBottom('${n.id}')">⬇️ للأسفل</button>
+                <button class="action-btn" onclick="window.move('${n.id}', 1)">⬆️ رفع</button>
+                <button class="action-btn" onclick="window.move('${n.id}', -1)">⬇️ إنزال</button>
                 <button class="action-btn delete-btn" onclick="window.del('${n.id}')">🗑️ حذف</button>
             </div>
         </div>`).join('') || '<p style="text-align:center">لا توجد ملاحظات</p>';
@@ -119,17 +119,15 @@
     window.pin = async (id, p) => { await setDoc(doc(db, "notes", id), {isPinned: !p, order: Date.now()}, {merge: true}); load(); };
     window.edit = (id) => { const n = notes.find(x => x.id === id); $('noteInput').value = n.text; editId = id; $('saveBtn').innerText = '✏️ تحديث'; $('noteInput').scrollIntoView({behavior:'smooth'}); };
 
-    // 🟢 دالة الرفع إلى أعلى القائمة تماماً
-    window.moveToTop = async (id) => {
-        const maxOrder = notes.reduce((max, n) => Math.max(max, n.order || 0), 0);
-        await setDoc(doc(db, "notes", id), { order: maxOrder + 1000, isPinned: false }, { merge: true });
-        load();
-    };
-
-    // 🔴 دالة الإنزال إلى أسفل القائمة تماماً
-    window.moveToBottom = async (id) => {
-        const minOrder = notes.reduce((min, n) => Math.min(min, n.order || 0), Date.now());
-        await setDoc(doc(db, "notes", id), { order: minOrder - 1000, isPinned: false }, { merge: true });
+    // ✅ هنا التعديل الذي طلبته: زر الرفع يرفعها لأعلى القائمة، وزر الإنزال ينزلها لأسفل القائمة
+    window.move = async (id, dir) => {
+        if (dir === 1) {
+            const maxOrder = notes.reduce((max, n) => Math.max(max, n.order || 0), Date.now());
+            await setDoc(doc(db, "notes", id), { order: maxOrder + 1000, isPinned: false }, { merge: true });
+        } else if (dir === -1) {
+            const minOrder = notes.reduce((min, n) => Math.min(min, n.order || 0), Date.now());
+            await setDoc(doc(db, "notes", id), { order: minOrder - 1000, isPinned: false }, { merge: true });
+        }
         load();
     };
 
