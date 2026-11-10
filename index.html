@@ -118,24 +118,14 @@
         .notes-list { margin-top: 10px; border-top: 2px double var(--paper-border); padding-top: 15px; display: none; }
         .notes-list.visible { display: block; }
 
-        /* شريط البحث */
-        .search-box {
-            margin-bottom: 15px;
-        }
+        .search-box { margin-bottom: 15px; }
         .search-box input {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid var(--paper-border);
-            border-radius: 6px;
-            font-size: 16px;
-            font-family: 'Georgia', 'Amiri', serif;
-            background: var(--paper-card);
-            color: var(--ink-dark);
+            width: 100%; padding: 12px 15px;
+            border: 2px solid var(--paper-border); border-radius: 6px;
+            font-size: 16px; font-family: 'Georgia', 'Amiri', serif;
+            background: var(--paper-card); color: var(--ink-dark);
         }
-        .search-box input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-        }
+        .search-box input:focus { outline: none; border-color: var(--primary-color); }
 
         #notesContainer { display: flex; flex-direction: column; gap: 15px; margin-top: 10px; }
         
@@ -143,8 +133,7 @@
             background: radial-gradient(circle at 80% 20%, rgba(180, 140, 80, 0.06) 0%, transparent 40%), var(--paper-card);
             border: 1px solid var(--paper-border); border-radius: 4px; padding: 18px;
             box-shadow: 0 2px 5px rgba(120, 80, 40, 0.15), inset 0 0 20px rgba(160, 120, 60, 0.05);
-            transition: all 0.3s ease;
-            scroll-margin-top: 20px;
+            transition: all 0.3s ease; scroll-margin-top: 20px;
         }
         .note-card.pinned {
             border: 2px solid #b08d57;
@@ -156,12 +145,7 @@
         .pin-indicator { font-size: 16px; margin-left: 5px; }
         .note-text { font-size: 16px; line-height: 1.8; white-space: pre-wrap; word-wrap: break-word; color: var(--ink-dark); margin-bottom: 12px; }
         
-        .btn-group { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); 
-            gap: 8px; 
-            margin-top: 12px; 
-        }
+        .btn-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; margin-top: 12px; }
         .action-btn { 
             padding: 8px 10px; border-radius: 6px; border: 1px solid; 
             font-size: 13px; font-weight: 600; cursor: pointer; 
@@ -171,18 +155,14 @@
         
         .edit-btn { background: #e8dcc0; color: #6f4620; border-color: var(--paper-border); }
         .edit-btn:hover { background: #dcc99a; }
-        
         .pin-btn { background: #ebdcd0; color: #8b4513; border-color: #c9a07c; }
         .pin-btn:hover { background: #e0ccbd; }
         .pin-btn.active { background: #f7e8c8; border-color: #d4af37; color: #a67c00; box-shadow: inset 0 0 5px rgba(212,175,55,0.5); }
-
         .move-btn { background: #e2e8f0; color: #334155; border-color: #94a3b8; padding: 8px 4px; }
         .move-btn:hover { background: #cbd5e1; }
-
         .copy-btn { background: #d4e2eb; color: #2c5a7a; border-color: #9bb8cc; }
         .copy-btn:hover { background: #c0d6e3; }
         .copy-btn.copied { background: #c6e3c6; color: #2f5c2f; border-color: #8ebd8e; }
-        
         .delete-btn { background: #ecd5d5; color: var(--danger-color); border-color: #c99a9a; }
         .delete-btn:hover { background: #e0bcbc; }
         
@@ -207,34 +187,18 @@
         .note-attachment-image:hover { transform: scale(1.01); }
         .note-attachment-audio { width: 100%; border-radius: 6px; filter: sepia(30%) contrast(95%); }
 
-        /* الشريط العائم الموحد */
         .floating-toolbar {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 12px;
-            background: rgba(62, 44, 28, 0.95);
-            padding: 10px 20px;
-            border-radius: 40px;
-            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
-            border: 2px solid #c9a961;
+            position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+            display: flex; gap: 12px; background: rgba(62, 44, 28, 0.95);
+            padding: 10px 20px; border-radius: 40px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5); border: 2px solid #c9a961;
             z-index: 99999;
         }
         .toolbar-btn {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: #f4e4bc;
-            color: #3e2c1c;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            width: 45px; height: 45px; border-radius: 50%;
+            background: #f4e4bc; color: #3e2c1c; border: none;
+            font-size: 20px; cursor: pointer; transition: all 0.2s ease;
+            display: flex; align-items: center; justify-content: center;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
         .toolbar-btn:hover { background: #fff; transform: scale(1.1); }
@@ -280,16 +244,13 @@
         <button class="toggle-index-btn" id="toggleIndexBtn">📂 إظهار الفهرس</button>
 
         <div class="notes-list" id="notesList">
-            <!-- شريط البحث -->
             <div class="search-box">
                 <input type="text" id="searchInput" placeholder="🔍 ابحث في الملاحظات...">
             </div>
-            
             <div id="notesContainer">⏳ جاري تحميل الملاحظات...</div>
         </div>
     </div>
 
-    <!-- الشريط العائم -->
     <div class="floating-toolbar">
         <button class="toolbar-btn" id="scrollTopBtn" title="أعلى الصفحة">⬆️</button>
         <button class="toolbar-btn note-nav" id="goToFirstBtn" title="أول ملاحظة">🔝</button>
@@ -336,7 +297,6 @@
         const importBtn = document.getElementById('importBtn');
         const importInput = document.getElementById('importInput');
         const searchInput = document.getElementById('searchInput');
-        
         const goToFirstBtn = document.getElementById('goToFirstBtn');
         const goToLastBtn = document.getElementById('goToLastBtn');
 
@@ -344,39 +304,32 @@
         let selectedFiles = [];
         let editingAttachments = [];
         let isVisible = false;
-        
         let currentNotes = []; 
         let searchTerm = '';
 
+        // أحداث التمرير
         document.getElementById('scrollTopBtn').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
         document.getElementById('scrollBottomBtn').addEventListener('click', () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
 
+        // التنقل بين الملاحظات
         goToFirstBtn.addEventListener('click', () => {
             const firstCard = notesContainer.querySelector('.note-card');
-            if (firstCard) {
-                firstCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            } else {
-                showStatus('⚠️ لا توجد ملاحظات لعرضها!', 'err');
-                setTimeout(() => showStatus(''), 2000);
-            }
+            if (firstCard) firstCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
 
         goToLastBtn.addEventListener('click', () => {
             const cards = notesContainer.querySelectorAll('.note-card');
-            if (cards.length > 0) {
-                cards[cards.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
-            } else {
-                showStatus('⚠️ لا توجد ملاحظات لعرضها!', 'err');
-                setTimeout(() => showStatus(''), 2000);
-            }
+            if (cards.length > 0) cards[cards.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
         });
 
+        // الفهرس
         toggleBtn.addEventListener('click', () => {
             isVisible = !isVisible;
             notesList.classList.toggle('visible', isVisible);
             toggleBtn.textContent = isVisible ? '📂 إخفاء الفهرس' : '📂 إظهار الفهرس';
         });
 
+        // البحث
         searchInput.addEventListener('input', (e) => {
             searchTerm = e.target.value.toLowerCase().trim();
             renderNotesList();
@@ -395,16 +348,10 @@
         }
 
         function showStatus(msg, kind = 'info') {
-            const palette = {
-                info: { color: '#2563eb', bg: '#eff6ff' },
-                ok:   { color: '#16a34a', bg: '#f0fdf4' },
-                err:  { color: '#dc2626', bg: '#fef2f2' }
-            };
+            const palette = { info: { color: '#2563eb', bg: '#eff6ff' }, ok: { color: '#16a34a', bg: '#f0fdf4' }, err: { color: '#dc2626', bg: '#fef2f2' } };
             const c = palette[kind] || palette.info;
             if (!msg) { statusEl.innerText = ''; statusEl.style.background = 'transparent'; return; }
-            statusEl.style.color = c.color;
-            statusEl.style.background = c.bg;
-            statusEl.innerText = msg;
+            statusEl.style.color = c.color; statusEl.style.background = c.bg; statusEl.innerText = msg;
         }
 
         function compressImage(file) {
@@ -417,11 +364,9 @@
                         let { width, height } = img;
                         if (width > MAX_IMAGE_DIMENSION || height > MAX_IMAGE_DIMENSION) {
                             const ratio = Math.min(MAX_IMAGE_DIMENSION / width, MAX_IMAGE_DIMENSION / height);
-                            width = Math.floor(width * ratio);
-                            height = Math.floor(height * ratio);
+                            width = Math.floor(width * ratio); height = Math.floor(height * ratio);
                         }
-                        canvas.width = width;
-                        canvas.height = height;
+                        canvas.width = width; canvas.height = height;
                         canvas.getContext('2d').drawImage(img, 0, 0, width, height);
                         resolve(canvas.toDataURL('image/jpeg', IMAGE_QUALITY));
                     };
@@ -442,15 +387,8 @@
             });
         }
 
-        imageInput.addEventListener('change', async () => {
-            await processFiles(imageInput.files, 'image');
-            imageInput.value = '';
-        });
-
-        audioInput.addEventListener('change', async () => {
-            await processFiles(audioInput.files, 'audio');
-            audioInput.value = '';
-        });
+        imageInput.addEventListener('change', async () => { await processFiles(imageInput.files, 'image'); imageInput.value = ''; });
+        audioInput.addEventListener('change', async () => { await processFiles(audioInput.files, 'audio'); audioInput.value = ''; });
 
         async function processFiles(files, kind) {
             for (const file of files) {
@@ -459,27 +397,17 @@
                         if (!file.type.startsWith('image/')) continue;
                         showStatus(`⏳ جاري ضغط الصورة: ${file.name || 'صورة ملصوقة'}`, 'info');
                         const dataUrl = await compressImage(file);
-                        selectedFiles.push({
-                            name: file.name || `صورة_ملصوقة_${Date.now()}.jpg`, 
-                            type: 'image/jpeg',
-                            size: Math.floor(dataUrl.length * 0.75), data: dataUrl
-                        });
+                        selectedFiles.push({ name: file.name || `صورة_ملصوقة_${Date.now()}.jpg`, type: 'image/jpeg', size: Math.floor(dataUrl.length * 0.75), data: dataUrl });
                     } else {
                         if (!file.type.startsWith('audio/')) continue;
-                        if (file.size > MAX_AUDIO_SIZE) {
-                            alert(`⚠️ الملف "${file.name}" كبير جداً\nالحجم: ${bytesToReadable(file.size)}\nالحد الأقصى: ${bytesToReadable(MAX_AUDIO_SIZE)}`);
-                            continue;
-                        }
+                        if (file.size > MAX_AUDIO_SIZE) { alert(`⚠️ الملف "${file.name}" كبير جداً\nالحد الأقصى: ${bytesToReadable(MAX_AUDIO_SIZE)}`); continue; }
                         showStatus(`⏳ جاري معالجة: ${file.name}`, 'info');
                         const dataUrl = await fileToBase64(file);
                         selectedFiles.push({ name: file.name, type: file.type, size: file.size, data: dataUrl });
                     }
-                } catch (err) {
-                    alert(`❌ فشل معالجة الملف: ${err.message}`);
-                }
+                } catch (err) { alert(`❌ فشل معالجة الملف: ${err.message}`); }
             }
-            showStatus('');
-            renderSelectedFiles();
+            showStatus(''); renderSelectedFiles();
         }
 
         function renderSelectedFiles() {
@@ -491,21 +419,10 @@
                 const row = document.createElement('div');
                 row.className = 'selected-file';
                 const icon = file.type.startsWith('image/') ? '🖼️' : '🎵';
-                const name = document.createElement('span');
-                name.className = 'selected-file-name';
-                name.textContent = `${icon} ${file.name}`;
-                const size = document.createElement('span');
-                size.className = 'selected-file-size';
-                size.textContent = bytesToReadable(file.size);
+                row.innerHTML = `<span class="selected-file-name">${icon} ${file.name}</span><span class="selected-file-size">${bytesToReadable(file.size)}</span>`;
                 const removeBtn = document.createElement('button');
-                removeBtn.type = 'button';
-                removeBtn.textContent = '❌';
-                removeBtn.addEventListener('click', () => {
-                    selectedFiles.splice(index, 1);
-                    renderSelectedFiles();
-                });
-                row.appendChild(name);
-                row.appendChild(size);
+                removeBtn.type = 'button'; removeBtn.textContent = '❌';
+                removeBtn.addEventListener('click', () => { selectedFiles.splice(index, 1); renderSelectedFiles(); });
                 row.appendChild(removeBtn);
                 selectedFilesEl.appendChild(row);
             });
@@ -525,49 +442,32 @@
                 showStatus('✅ تم تحديث الترتيب!', 'ok');
                 await fetchNotes();
                 setTimeout(() => showStatus(''), 2000);
-            } catch (error) {
-                showStatus('❌ خطأ في التحديث: ' + error.message, 'err');
-                console.error(error);
-            }
+            } catch (error) { showStatus('❌ خطأ في التحديث: ' + error.message, 'err'); }
         }
 
         async function fetchNotes() {
             try {
                 const q = query(collection(db, "notes"));
                 const snap = await getDocs(q);
-                
                 currentNotes = []; 
-                snap.forEach(d => {
-                    currentNotes.push({ id: d.id, ...d.data() });
-                });
+                snap.forEach(d => { currentNotes.push({ id: d.id, ...d.data() }); });
 
-                // الترتيب: المثبتة أولاً، ثم الأحدث (بناءً على order)
                 currentNotes.sort((a, b) => {
                     const pinA = a.isPinned ? 1 : 0;
                     const pinB = b.isPinned ? 1 : 0;
                     if (pinA !== pinB) return pinB - pinA; 
-
-                    const orderA = a.order || 0;
-                    const orderB = b.order || 0;
-                    return orderB - orderA; // الأحدث (الرقم الأكبر) أولاً
+                    return (b.order || 0) - (a.order || 0); // الأحدث (order الأكبر) أولاً
                 });
 
                 renderNotesList();
-                
-            } catch (error) {
-                notesContainer.innerHTML = `<p style="color:#dc2626;text-align:center;">خطأ في تحميل الملاحظات: ${error.message}</p>`;
-                console.error(error);
-            }
+            } catch (error) { notesContainer.innerHTML = `<p style="color:#dc2626;text-align:center;">خطأ: ${error.message}</p>`; }
         }
 
         function renderNotesList() {
             notesContainer.innerHTML = '';
-            
             let filteredNotes = currentNotes;
             if (searchTerm) {
-                filteredNotes = currentNotes.filter(n => 
-                    (n.text || '').toLowerCase().includes(searchTerm)
-                );
+                filteredNotes = currentNotes.filter(n => (n.text || '').toLowerCase().includes(searchTerm));
             }
 
             if (filteredNotes.length === 0) {
@@ -576,18 +476,14 @@
             }
 
             filteredNotes.forEach((note, index) => {
-                const data = note;
-                const docId = note.id;
-                const isPinned = data.isPinned || false;
+                const data = note, docId = note.id, isPinned = data.isPinned || false;
+                const isFirst = index === 0, isLast = index === filteredNotes.length - 1;
 
-                const isFirst = index === 0;
-                const isLast = index === filteredNotes.length - 1;
-
-                let dateStr = '';
+                let dateStr = 'تاريخ غير محدد';
                 try {
                     const d = data.timestamp?.toDate ? data.timestamp.toDate() : new Date(data.timestamp);
                     dateStr = d.toLocaleString('ar-EG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-                } catch (e) { dateStr = 'تاريخ غير محدد'; }
+                } catch (e) {}
                 const textContent = data.text || 'ملاحظة فارغة';
                 
                 const card = document.createElement('div');
@@ -599,8 +495,7 @@
                 card.appendChild(header);
                 
                 const textEl = document.createElement('div');
-                textEl.className = 'note-text';
-                textEl.textContent = textContent;
+                textEl.className = 'note-text'; textEl.textContent = textContent;
                 card.appendChild(textEl);
                 
                 const attachments = data.attachments || [];
@@ -613,11 +508,7 @@
                         if (file.type?.startsWith('image/')) {
                             const img = document.createElement('img');
                             img.src = src; img.className = 'note-attachment-image'; img.alt = file.name || 'صورة';
-                            img.title = 'اضغط لعرض الصورة بحجمها الكامل';
-                            img.addEventListener('click', () => {
-                                const w = window.open();
-                                w.document.write(`<title>${file.name || 'صورة'}</title><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="${src}" style="max-width:100%;max-height:100vh;"></body>`);
-                            });
+                            img.addEventListener('click', () => { const w = window.open(); w.document.write(`<img src="${src}" style="max-width:100%;max-height:100vh;">`); });
                             attDiv.appendChild(img);
                         } else if (file.type?.startsWith('audio/')) {
                             const audio = document.createElement('audio');
@@ -632,280 +523,158 @@
                 btnGroup.className = 'btn-group';
 
                 const editBtn = document.createElement('button');
-                editBtn.className = 'action-btn edit-btn';
-                editBtn.innerHTML = '✏️ تعديل';
+                editBtn.className = 'action-btn edit-btn'; editBtn.innerHTML = '✏️ تعديل';
                 editBtn.addEventListener('click', () => {
-                    noteInput.value = textContent;
-                    editingAttachments = data.attachments || [];
-                    selectedFiles = [];
-                    renderSelectedFiles();
-                    saveBtn.textContent = '✅ تحديث الملاحظة';
-                    saveBtn.classList.add('update-mode');
-                    setButtonColor('green');
-                    editingDocId = docId;
-                    noteInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    noteInput.focus();
-                    showStatus('✏️ جارٍ التعديل...', 'info');
+                    noteInput.value = textContent; editingAttachments = data.attachments || []; selectedFiles = []; renderSelectedFiles();
+                    saveBtn.textContent = '✅ تحديث الملاحظة'; saveBtn.classList.add('update-mode'); setButtonColor('green'); editingDocId = docId;
+                    noteInput.scrollIntoView({ behavior: 'smooth', block: 'center' }); noteInput.focus(); showStatus('✏️ جارٍ التعديل...', 'info');
                 });
 
                 const pinBtn = document.createElement('button');
-                pinBtn.className = `action-btn pin-btn ${isPinned ? 'active' : ''}`;
-                pinBtn.innerHTML = isPinned ? '📌 مثبتة' : '📌 تثبيت';
+                pinBtn.className = `action-btn pin-btn ${isPinned ? 'active' : ''}`; pinBtn.innerHTML = isPinned ? '📌 مثبتة' : '📌 تثبيت';
                 pinBtn.addEventListener('click', async () => {
-                    const newOrder = isPinned ? 0 : (Date.now()); // لضمان أنها تظهر في الأعلى
+                    const newOrder = isPinned ? 0 : (Date.now()); 
                     await updateNoteOrder(docId, { isPinned: !isPinned, order: newOrder });
                 });
 
                 const moveUpBtn = document.createElement('button');
-                moveUpBtn.className = 'action-btn move-btn';
-                moveUpBtn.innerHTML = '⬆️ رفع';
-                moveUpBtn.title = 'تقديم الملاحظة للأعلى';
+                moveUpBtn.className = 'action-btn move-btn'; moveUpBtn.innerHTML = '⬆️ رفع';
                 if (isFirst && !searchTerm) moveUpBtn.disabled = true;
                 moveUpBtn.addEventListener('click', async () => {
                     const originalIndex = currentNotes.findIndex(n => n.id === docId);
                     if (originalIndex > 0) {
                         const prevNote = currentNotes[originalIndex - 1];
-                        // تبادل القيم لرفع الملاحظة
-                        const prevOrder = prevNote.order || 0;
-                        await updateNoteOrder(docId, { order: prevOrder + 1, isPinned: prevNote.isPinned || false });
+                        await updateNoteOrder(docId, { order: (prevNote.order || 0) + 1, isPinned: prevNote.isPinned || false });
                     }
                 });
 
                 const moveDownBtn = document.createElement('button');
-                moveDownBtn.className = 'action-btn move-btn';
-                moveDownBtn.innerHTML = '⬇️ إنزال';
-                moveDownBtn.title = 'تأخير الملاحظة للأسفل';
+                moveDownBtn.className = 'action-btn move-btn'; moveDownBtn.innerHTML = '⬇️ إنزال';
                 if (isLast && !searchTerm) moveDownBtn.disabled = true;
                 moveDownBtn.addEventListener('click', async () => {
                     const originalIndex = currentNotes.findIndex(n => n.id === docId);
                     if (originalIndex < currentNotes.length - 1) {
                         const nextNote = currentNotes[originalIndex + 1];
-                        const nextOrder = nextNote.order || 0;
-                        await updateNoteOrder(docId, { order: nextOrder - 1, isPinned: nextNote.isPinned || false });
+                        await updateNoteOrder(docId, { order: (nextNote.order || 0) - 1, isPinned: nextNote.isPinned || false });
                     }
                 });
 
                 const copyBtn = document.createElement('button');
-                copyBtn.className = 'action-btn copy-btn';
-                copyBtn.innerHTML = '📋 نسخ';
+                copyBtn.className = 'action-btn copy-btn'; copyBtn.innerHTML = '📋 نسخ';
                 copyBtn.addEventListener('click', async () => {
                     try {
                         await navigator.clipboard.writeText(textContent);
-                        const originalText = copyBtn.innerHTML;
-                        copyBtn.innerHTML = '✅ تم النسخ!';
-                        copyBtn.classList.add('copied');
-                        setTimeout(() => {
-                            copyBtn.innerHTML = originalText;
-                            copyBtn.classList.remove('copied');
-                        }, 2000);
-                    } catch (err) {
-                        alert('❌ تعذر النسخ تلقائياً. يرجى تحديد النص يدوياً.');
-                    }
+                        const originalText = copyBtn.innerHTML; copyBtn.innerHTML = '✅ تم النسخ!'; copyBtn.classList.add('copied');
+                        setTimeout(() => { copyBtn.innerHTML = originalText; copyBtn.classList.remove('copied'); }, 2000);
+                    } catch (err) { alert('❌ تعذر النسخ تلقائياً.'); }
                 });
 
                 const deleteBtn = document.createElement('button');
-                deleteBtn.className = 'action-btn delete-btn';
-                deleteBtn.innerHTML = '🗑️ حذف';
+                deleteBtn.className = 'action-btn delete-btn'; deleteBtn.innerHTML = '🗑️ حذف';
                 deleteBtn.addEventListener('click', async () => {
                     if (!confirm('هل أنت متأكد من حذف هذه الملاحظة نهائياً؟')) return;
                     try {
                         showStatus('⏳ جاري الحذف...', 'info');
                         await deleteDoc(doc(db, "notes", docId));
-                        showStatus('✅ تم الحذف بنجاح!', 'ok');
-                        await fetchNotes();
-                        setTimeout(() => showStatus(''), 2500);
-                    } catch (error) {
-                        showStatus('❌ خطأ في الحذف: ' + error.message, 'err');
-                    }
+                        showStatus('✅ تم الحذف بنجاح!', 'ok'); await fetchNotes(); setTimeout(() => showStatus(''), 2500);
+                    } catch (error) { showStatus('❌ خطأ في الحذف: ' + error.message, 'err'); }
                 });
 
-                btnGroup.appendChild(editBtn);
-                btnGroup.appendChild(pinBtn);
-                btnGroup.appendChild(moveUpBtn);
-                btnGroup.appendChild(moveDownBtn);
-                btnGroup.appendChild(copyBtn);
-                btnGroup.appendChild(deleteBtn);
-                card.appendChild(btnGroup);
-
-                notesContainer.appendChild(card);
+                btnGroup.appendChild(editBtn); btnGroup.appendChild(pinBtn); btnGroup.appendChild(moveUpBtn); btnGroup.appendChild(moveDownBtn); btnGroup.appendChild(copyBtn); btnGroup.appendChild(deleteBtn);
+                card.appendChild(btnGroup); notesContainer.appendChild(card);
             });
         }
 
         function estimateDocumentSize(text, attachments) {
             let size = text.length;
-            attachments.forEach(a => {
-                size += (a.data || '').length + (a.name || '').length + (a.type || '').length;
-            });
+            attachments.forEach(a => { size += (a.data || '').length + (a.name || '').length + (a.type || '').length; });
             return size;
         }
 
         saveBtn.addEventListener('click', async () => {
             const noteText = noteInput.value.trim();
             if (!noteText && selectedFiles.length === 0 && editingAttachments.length === 0) {
-                showStatus('⚠️ اكتب ملاحظة أو أضف صورة/ملف صوتي أولاً!', 'err');
-                setButtonColor('red');
-                return;
+                showStatus('⚠️ اكتب ملاحظة أو أضف صورة/ملف صوتي أولاً!', 'err'); setButtonColor('red'); return;
             }
             try {
                 if (editingDocId) {
                     const allAtt = [...editingAttachments, ...selectedFiles];
-                    if (estimateDocumentSize(noteText, allAtt) > FIRESTORE_LIMIT) {
-                        showStatus(`❌ الحجم الإجمالي كبير جداً.`, 'err');
-                        setButtonColor('red');
-                        return;
-                    }
+                    if (estimateDocumentSize(noteText, allAtt) > FIRESTORE_LIMIT) { showStatus(`❌ الحجم كبير جداً.`, 'err'); return; }
                     showStatus('⏳ جاري تحديث الملاحظة...', 'info');
                     
                     const existingNote = currentNotes.find(n => n.id === editingDocId);
                     await updateDoc(doc(db, "notes", editingDocId), {
-                        text: noteText, 
-                        attachments: allAtt, 
-                        timestamp: new Date(),
+                        text: noteText, attachments: allAtt, timestamp: new Date(),
                         isPinned: existingNote ? existingNote.isPinned : false,
                         order: existingNote ? (existingNote.order || 0) : Date.now()
                     });
 
-                    showStatus('✅ تم تحديث الملاحظة بنجاح!', 'ok');
-                    saveBtn.textContent = '💾 حفظ على السحابة';
-                    saveBtn.classList.remove('update-mode');
-                    setButtonColor('green');
-                    editingDocId = null;
-                    editingAttachments = [];
-                    selectedFiles = [];
-                    noteInput.value = '';
-                    renderSelectedFiles();
+                    showStatus('✅ تم تحديث الملاحظة!', 'ok');
+                    saveBtn.textContent = '💾 حفظ على السحابة'; saveBtn.classList.remove('update-mode'); setButtonColor('green');
+                    editingDocId = null; editingAttachments = []; selectedFiles = []; noteInput.value = ''; renderSelectedFiles();
                 } else {
-                    if (estimateDocumentSize(noteText, selectedFiles) > FIRESTORE_LIMIT) {
-                        showStatus(`❌ الحجم الإجمالي كبير جداً.`, 'err');
-                        setButtonColor('red');
-                        return;
-                    }
+                    if (estimateDocumentSize(noteText, selectedFiles) > FIRESTORE_LIMIT) { showStatus(`❌ الحجم كبير جداً.`, 'err'); return; }
                     showStatus('⏳ جاري حفظ الملاحظة...', 'info');
                     
-                    // الملاحظة الجديدة تأخذ Date.now() وهو الأكبر، فستظهر أولاً
                     await setDoc(doc(collection(db, "notes")), {
-                        text: noteText, 
-                        attachments: selectedFiles, 
-                        timestamp: new Date(),
-                        isPinned: false,
-                        order: Date.now() 
+                        text: noteText, attachments: selectedFiles, timestamp: new Date(),
+                        isPinned: false, order: Date.now()
                     });
                     
-                    showStatus('✅ تم الحفظ بنجاح!', 'ok');
-                    setButtonColor('green');
-                    selectedFiles = [];
-                    noteInput.value = '';
-                    renderSelectedFiles();
+                    showStatus('✅ تم الحفظ بنجاح!', 'ok'); setButtonColor('green');
+                    selectedFiles = []; noteInput.value = ''; renderSelectedFiles();
                 }
                 await fetchNotes();
-                setTimeout(() => {
-                    if (!editingDocId) {
-                        setButtonColor('red');
-                        saveBtn.textContent = '💾 حفظ على السحابة';
-                    }
-                }, 3000);
-            } catch (e) {
-                showStatus('❌ حدث خطأ: ' + e.message, 'err');
-                setButtonColor('red');
-            }
+                setTimeout(() => { if (!editingDocId) { setButtonColor('red'); saveBtn.textContent = '💾 حفظ على السحابة'; } }, 3000);
+            } catch (e) { showStatus('❌ حدث خطأ: ' + e.message, 'err'); setButtonColor('red'); }
         });
 
-        noteInput.addEventListener('input', () => {
-            if (noteInput.value.trim().length > 0) setButtonColor('red');
-        });
+        noteInput.addEventListener('input', () => { if (noteInput.value.trim().length > 0) setButtonColor('red'); });
 
         noteInput.addEventListener('paste', async (event) => {
             const items = (event.clipboardData || event.originalEvent.clipboardData).items;
             let hasImage = false;
-
             for (const item of items) {
                 if (item.type.indexOf('image') !== -1) {
-                    hasImage = true;
-                    const file = item.getAsFile();
-                    if (file) {
-                        await processFiles([file], 'image');
-                    }
+                    hasImage = true; const file = item.getAsFile();
+                    if (file) await processFiles([file], 'image');
                 }
             }
-
-            if (hasImage) {
-                event.preventDefault(); 
-                showStatus('🖼️ تم لصق الصورة وإضافتها للمرفقات!', 'ok');
-                setTimeout(() => showStatus(''), 3000);
-            }
+            if (hasImage) { event.preventDefault(); showStatus('🖼️ تم لصق الصورة!', 'ok'); setTimeout(() => showStatus(''), 3000); }
         });
 
-        /* ================= التصدير والاستيراد ================= */
+        /* التصدير والاستيراد */
         exportBtn.addEventListener('click', exportNotes);
-
         async function exportNotes() {
             try {
-                exportBtn.disabled = true;
-                showStatus('⏳ جاري تجهيز النسخة الاحتياطية...', 'info');
-
-                const q = query(collection(db, "notes"));
-                const snap = await getDocs(q);
+                exportBtn.disabled = true; showStatus('⏳ جاري تجهيز النسخة...', 'info');
+                const snap = await getDocs(query(collection(db, "notes")));
                 const notes = [];
+                snap.forEach(d => { const data = d.data(); notes.push({ id: d.id, text: data.text || "", attachments: data.attachments || [], timestamp: data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : data.timestamp, isPinned: data.isPinned || false, order: data.order || 0 }); });
 
-                snap.forEach(d => {
-                    const data = d.data();
-                    notes.push({
-                        id: d.id,
-                        text: data.text || "",
-                        attachments: data.attachments || [],
-                        timestamp: data.timestamp?.toDate ? data.timestamp.toDate().toISOString() : data.timestamp,
-                        isPinned: data.isPinned || false,
-                        order: data.order || 0
-                    });
-                });
-
-                if (notes.length === 0) {
-                    showStatus('⚠️ لا توجد ملاحظات لتصديرها.', 'err');
-                    return;
-                }
-
-                const payload = { app: 'cloud-notebook', version: 2, exportedAt: new Date().toISOString(), count: notes.length, notes };
-                const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                const now = new Date();
-                const pad = (n) => String(n).padStart(2, '0');
-                const dateStr = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}_${pad(now.getHours())}-${pad(now.getMinutes())}`;
-                
-                a.download = `notes-backup-${dateStr}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
+                if (notes.length === 0) { showStatus('⚠️ لا توجد ملاحظات.', 'err'); return; }
+                const blob = new Blob([JSON.stringify({ app: 'cloud-notebook', version: 2, exportedAt: new Date().toISOString(), notes }, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob); const a = document.createElement('a');
+                a.href = url; a.download = `notes-backup-${new Date().toISOString().slice(0,10)}.json`;
+                document.body.appendChild(a); a.click(); document.body.removeChild(a);
                 setTimeout(() => URL.revokeObjectURL(url), 4000);
-                showStatus(`✅ تم تصدير ${notes.length} ملاحظة بنجاح.`, 'ok');
-                setTimeout(() => showStatus(''), 5000);
-            } catch (error) {
-                showStatus('❌ فشل التصدير: ' + error.message, 'err');
-            } finally {
-                exportBtn.disabled = false;
-            }
+                showStatus(`✅ تم تصدير ${notes.length} ملاحظة.`, 'ok'); setTimeout(() => showStatus(''), 5000);
+            } catch (error) { showStatus('❌ فشل التصدير: ' + error.message, 'err'); } finally { exportBtn.disabled = false; }
         }
 
         importBtn.addEventListener('click', () => importInput.click());
         importInput.addEventListener('change', async () => {
-            const file = importInput.files && importInput.files[0];
-            importInput.value = '';
+            const file = importInput.files && importInput.files[0]; importInput.value = '';
             if (file) await importNotesFromFile(file);
         });
 
         async function importNotesFromFile(file) {
             try {
-                importBtn.disabled = true;
-                showStatus('⏳ جاري قراءة الملف...', 'info');
-                const raw = await file.text();
-                let payload = JSON.parse(raw);
+                importBtn.disabled = true; showStatus('⏳ جاري قراءة الملف...', 'info');
+                const raw = await file.text(); let payload = JSON.parse(raw);
                 let incoming = Array.isArray(payload) ? payload : (payload && Array.isArray(payload.notes) ? payload.notes : null);
-
-                if (!incoming || incoming.length === 0) throw new Error('الملف لا يحتوي على ملاحظات صالحة.');
-
-                const proceed = confirm(`📥 تم العثور على ${incoming.length} ملاحظة. سيتم إضافتها كملاحظات جديدة. متابعة؟`);
-                if (!proceed) { showStatus('↩️ تم الإلغاء.', 'info'); setTimeout(() => showStatus(''), 2500); return; }
+                if (!incoming || incoming.length === 0) throw new Error('الملف لا يحتوي على ملاحظات.');
+                if (!confirm(`📥 تم العثور على ${incoming.length} ملاحظة. متابعة؟`)) { showStatus('↩️ تم الإلغاء.', 'info'); setTimeout(() => showStatus(''), 2500); return; }
 
                 let added = 0, failed = 0;
                 for (let i = 0; i < incoming.length; i++) {
@@ -915,44 +684,21 @@
                         const attachments = Array.isArray(n.attachments) ? n.attachments.filter(a => a && (a.data || a.url)).map(a => ({ name: a.name || 'ملف', type: a.type || '', size: a.size || 0, data: a.data || a.url || '' })) : [];
                         if (!text.trim() && attachments.length === 0) continue;
                         if (estimateDocumentSize(text, attachments) > FIRESTORE_LIMIT) { failed++; continue; }
-                        
-                        let ts = new Date();
-                        if (n.timestamp) { const d = new Date(n.timestamp); if (!isNaN(d.getTime())) ts = d; }
-                        
-                        const isPinned = n.isPinned || false;
-                        const order = n.order || Date.now() + i;
 
-                        const cleanNote = {
-                            text: text,
-                            attachments: attachments,
-                            timestamp: ts,
-                            isPinned: isPinned === true ? true : false,
-                            order: order || Date.now()
-                        };
+                        let ts = new Date(); if (n.timestamp) { const d = new Date(n.timestamp); if (!isNaN(d.getTime())) ts = d; }
+                        const isPinned = n.isPinned || false; const order = n.order || Date.now() + i;
 
-                        await setDoc(doc(collection(db, "notes")), cleanNote);
-                        added++;
-                    } catch (err) { 
-                        console.error("فشل في حفظ ملاحظة:", err);
-                        failed++; 
-                    }
+                        const cleanNote = { text: text, attachments: attachments, timestamp: ts, isPinned: isPinned === true ? true : false, order: order || Date.now() };
+                        await setDoc(doc(collection(db, "notes")), cleanNote); added++;
+                    } catch (err) { failed++; }
                     showStatus(`⏳ جاري الاستيراد... (${i + 1}/${incoming.length}) — ✅ ${added} • ❌ ${failed}`, 'info');
                 }
 
                 await fetchNotes();
-                if (added > 0 && !isVisible) { 
-                    isVisible = true; 
-                    notesList.classList.add('visible'); 
-                    toggleBtn.textContent = '📂 إخفاء الفهرس'; 
-                }
-                
-                showStatus(`✅ تم الاستيراد: ${added} ملاحظة جديدة` + (failed ? ` • فشل ${failed}` : ''), failed > 0 ? 'info' : 'ok');
+                if (added > 0 && !isVisible) { isVisible = true; notesList.classList.add('visible'); toggleBtn.textContent = '📂 إخفاء الفهرس'; }
+                showStatus(`✅ تم الاستيراد: ${added} ملاحظة` + (failed ? ` • فشل ${failed}` : ''), failed > 0 ? 'info' : 'ok');
                 setTimeout(() => showStatus(''), 7000);
-            } catch (error) {
-                showStatus('❌ فشل الاستيراد: ' + error.message, 'err');
-            } finally {
-                importBtn.disabled = false;
-            }
+            } catch (error) { showStatus('❌ فشل الاستيراد: ' + error.message, 'err'); } finally { importBtn.disabled = false; }
         }
 
         fetchNotes();
