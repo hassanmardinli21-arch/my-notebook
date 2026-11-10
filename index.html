@@ -3,191 +3,155 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>دفتر الملاحظات</title>
+<title>دفتر الملاحظات السحابي</title>
 <style>
-    body { font-family: Arial, sans-serif; background: #f4e4bc; padding: 20px; }
-    .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 10px; }
-    h2 { text-align: center; }
-    textarea { width: 100%; height: 100px; padding: 10px; box-sizing: border-box; margin-bottom: 10px; }
-    button { padding: 10px; margin: 5px 0; cursor: pointer; width: 100%; background: #ddd; border: 1px solid #aaa; border-radius: 5px; font-weight: bold; }
-    input[type="text"] { width: 100%; padding: 10px; margin-bottom: 10px; box-sizing: border-box; }
-    .note { background: #f9f9f9; padding: 15px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; }
-    .note.pinned { border: 2px solid gold; background: #fffdf5; }
-    .actions { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 10px; }
-    .actions button { width: auto; padding: 5px 10px; font-size: 12px; margin: 0; }
-    .hidden { display: none; }
-    .floating { position: fixed; bottom: 10px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; background: #333; padding: 10px; border-radius: 30px; }
-    .floating button { width: 40px; height: 40px; border-radius: 50%; padding: 0; background: white; }
+:root{--paper-bg:#f4e4bc;--paper-card:#faf0d7;--paper-border:#c9a961;--ink-dark:#3e2c1c;--ink-med:#5c4530;--primary:#8b5a2b;--danger:#a83232;--success:#5d8a3e;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Georgia','Amiri',serif;background:radial-gradient(ellipse at center,#7a6344 0%,#5d4a35 100%);color:var(--ink-dark);padding:20px;min-height:100vh;padding-bottom:100px;}
+.container{max-width:800px;margin:0 auto;background:radial-gradient(circle at 20% 30%,rgba(180,140,80,.08) 0%,transparent 25%),var(--paper-bg);padding:30px;border-radius:8px;border:2px solid #a8845a;box-shadow:0 20px 50px rgba(0,0,0,.5),inset 0 0 60px rgba(160,120,60,.15);position:relative;}
+h2{font-size:28px;text-align:center;margin-bottom:20px;border-bottom:2px double var(--paper-border);padding-bottom:15px;}
+textarea{width:100%;height:140px;padding:15px;border:2px solid var(--paper-border);border-radius:6px;font-family:inherit;font-size:16px;background:var(--paper-card);resize:vertical;}
+textarea:focus{outline:none;border-color:var(--primary);}
+#saveBtn{background:linear-gradient(145deg,#a06b3a,#8b5a2b);color:#fdf6e3;border:1px solid #6f4620;padding:14px;border-radius:6px;font-size:18px;width:100%;margin-top:15px;cursor:pointer;font-family:inherit;font-weight:bold;box-shadow:0 4px 6px rgba(60,40,20,.4);}
+#saveBtn:hover{background:linear-gradient(145deg,#8b5a2b,#6f4620);}
+#status{text-align:center;margin-top:15px;font-weight:bold;font-size:15px;}
+.backup-box{display:flex;gap:10px;margin-top:15px;}
+.backup-btn{flex:1;padding:12px;border-radius:6px;border:2px solid var(--paper-border);background:var(--paper-card);cursor:pointer;font-family:inherit;font-weight:bold;}
+.toggle-index-btn{background:linear-gradient(145deg,#5c4530,#3e2c1c);color:#f4e4bc;border:none;padding:10px;border-radius:6px;font-size:16px;width:100%;margin:20px 0 10px;cursor:pointer;font-family:inherit;font-weight:bold;}
+.notes-list{display:none;border-top:2px double var(--paper-border);padding-top:15px;}
+.notes-list.visible{display:block;}
+.search-box{margin-bottom:15px;}
+.search-box input{width:100%;padding:12px;border:2px solid var(--paper-border);border-radius:6px;font-family:inherit;font-size:16px;background:var(--paper-card);}
+.search-box input:focus{outline:none;border-color:var(--primary);}
+#notesContainer{display:flex;flex-direction:column;gap:15px;}
+.note-card{background:var(--paper-card);border:1px solid var(--paper-border);border-radius:6px;padding:18px;box-shadow:0 2px 5px rgba(120,80,40,.15);}
+.note-card.pinned{border:2px solid #b08d57;background:#fdf5df;}
+.note-header{font-size:13px;color:var(--ink-med);margin-bottom:10px;border-bottom:1px dashed var(--paper-border);padding-bottom:8px;display:flex;justify-content:space-between;}
+.note-text{font-size:16px;line-height:1.8;white-space:pre-wrap;margin-bottom:12px;}
+.btn-group{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:8px;}
+.action-btn{padding:8px;border-radius:6px;border:1px solid var(--paper-border);font-size:13px;font-weight:bold;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:4px;}
+.edit-btn{background:#e8dcc0;color:#6f4620;}
+.edit-btn:hover{background:#dcc99a;}
+.pin-btn{background:#ebdcd0;color:#8b4513;}
+.pin-btn.active{background:#f7e8c8;border-color:#d4af37;color:#a67c00;}
+.move-btn{background:#e2e8f0;color:#334155;}
+.copy-btn{background:#d4e2eb;color:#2c5a7a;}
+.delete-btn{background:#ecd5d5;color:var(--danger);}
+.floating-toolbar{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:12px;background:rgba(62,44,28,.95);padding:10px 20px;border-radius:40px;border:2px solid #c9a961;z-index:999;}
+.toolbar-btn{width:45px;height:45px;border-radius:50%;background:#f4e4bc;color:#3e2c1c;border:none;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;}
+.toolbar-btn.nav{background:#8b5a2b;color:#fff;}
 </style>
 </head>
 <body>
 <div class="container">
-    <h2>دفتر الملاحظات</h2>
-    <textarea id="noteInput" placeholder="اكتب ملاحظتك هنا..."></textarea>
-    <button onclick="saveNote()">💾 حفظ</button>
-    <button onclick="toggleList()">📂 إظهار/إخفاء الملاحظات</button>
-    
-    <div id="listArea" class="hidden" style="margin-top:20px;">
-        <input type="text" id="searchInput" placeholder="🔍 ابحث..." oninput="renderNotes()">
-        <div id="notesContainer"></div>
-    </div>
+<h2>دفتر الملاحظات السحابي ☁️</h2>
+<textarea id="noteInput" placeholder="✍️ اكتب ملاحظاتك هنا..."></textarea>
+<button id="saveBtn">💾 حفظ على السحابة</button>
+<p id="status"></p>
+<div class="backup-box">
+<button class="backup-btn" id="exportBtn">📤 تصدير</button>
+<button class="backup-btn" id="importBtn">📥 استيراد</button>
+<input type="file" id="importInput" accept=".json" hidden>
+</div>
+<button class="toggle-index-btn" id="toggleIndexBtn">📂 إظهار الفهرس</button>
+<div class="notes-list" id="notesList">
+<div class="search-box"><input type="text" id="searchInput" placeholder="🔍 ابحث في الملاحظات..."></div>
+<div id="notesContainer">⏳ جاري التحميل...</div>
+</div>
 </div>
 
-<div class="floating">
-    <button onclick="window.scrollTo(0,0)">⬆️</button>
-    <button onclick="goFirst()">🔝</button>
-    <button onclick="goLast()">🔚</button>
-    <button onclick="window.scrollTo(0,document.body.scrollHeight)">⬇️</button>
+<div class="floating-toolbar">
+<button class="toolbar-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">⬆️</button>
+<button class="toolbar-btn nav" onclick="scrollToFirst()">🔝</button>
+<button class="toolbar-btn nav" onclick="scrollToLast()">🔚</button>
+<button class="toolbar-btn" onclick="window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})">⬇️</button>
 </div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyBrXDy3FuN6YJlIYTWCD_TsfMvkmiWZiLo",
-        authDomain: "hassanmedication.firebaseapp.com",
-        projectId: "hassanmedication",
-        storageBucket: "hassanmedication.firebasestorage.app",
-        messagingSenderId: "1023452446639",
-        appId: "1:1023452446639:web:dedf54f7ff5c4c93d9795a"
-    };
+const firebaseConfig={apiKey:"AIzaSyBrXDy3FuN6YJlIYTWCD_TsfMvkmiWZiLo",authDomain:"hassanmedication.firebaseapp.com",projectId:"hassanmedication",storageBucket:"hassanmedication.firebasestorage.app",messagingSenderId:"1023452446639",appId:"1:1023452446639:web:dedf54f7ff5c4c93d9795a"};
+const app=initializeApp(firebaseConfig);const db=getFirestore(app);
+let notes=[];let searchTerm='';let editingId=null;
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    let notes = [];
+document.getElementById('toggleIndexBtn').onclick=()=>{document.getElementById('notesList').classList.toggle('visible');document.getElementById('toggleIndexBtn').innerText=document.getElementById('notesList').classList.contains('visible')?'📂 إخفاء الفهرس':'📂 إظهار الفهرس';};
+document.getElementById('searchInput').oninput=(e)=>{searchTerm=e.target.value.toLowerCase();renderNotes();};
+window.scrollToFirst=()=>{const f=document.querySelector('.note-card');if(f)f.scrollIntoView({behavior:'smooth',block:'center'});};
+window.scrollToLast=()=>{const a=document.querySelectorAll('.note-card');if(a.length)a[a.length-1].scrollIntoView({behavior:'smooth',block:'center'});};
 
-    async function loadNotes() {
-        const snap = await getDocs(collection(db, "notes"));
-        notes = [];
-        snap.forEach(d => notes.push({ id: d.id, ...d.data() }));
-        notes.sort((a, b) => {
-            if (a.isPinned && !b.isPinned) return -1;
-            if (!a.isPinned && b.isPinned) return 1;
-            return (b.order || 0) - (a.order || 0);
-        });
-        renderNotes();
+async function loadNotes(){
+    const snap=await getDocs(collection(db,"notes"));
+    notes=[];snap.forEach(d=>notes.push({id:d.id,...d.data()}));
+    notes.sort((a,b)=>{
+        if((a.isPinned?1:0)!==(b.isPinned?1:0))return (b.isPinned?1:0)-(a.isPinned?1:0);
+        return (b.order||0)-(a.order||0);
+    });
+    renderNotes();
+}
+
+function renderNotes(){
+    const c=document.getElementById('notesContainer');
+    let f=notes.filter(n=>(n.text||'').toLowerCase().includes(searchTerm));
+    if(!f.length){c.innerHTML='<p style="text-align:center;">لا توجد ملاحظات</p>';return;}
+    c.innerHTML=f.map(n=>{
+        let date=new Date(n.timestamp||0).toLocaleString('ar-EG');
+        return `<div class="note-card ${n.isPinned?'pinned':''}">
+            <div class="note-header"><span>${n.isPinned?'📌':''} 📅 ${date}</span></div>
+            <div class="note-text">${n.text||''}</div>
+            <div class="btn-group">
+                <button class="action-btn edit-btn" onclick="window.editNote('${n.id}')">✏️ تعديل</button>
+                <button class="action-btn pin-btn ${n.isPinned?'active':''}" onclick="window.pinNote('${n.id}',${n.isPinned||false})">${n.isPinned?'📌 إلغاء':'📌 تثبيت'}</button>
+                <button class="action-btn move-btn" onclick="window.moveNote('${n.id}',1)">⬆️ رفع</button>
+                <button class="action-btn move-btn" onclick="window.moveNote('${n.id}',-1)">⬇️ إنزال</button>
+                <button class="action-btn copy-btn" onclick="navigator.clipboard.writeText('${(n.text||'').replace(/'/g,"\\'")}');alert('تم النسخ');">📋 نسخ</button>
+                <button class="action-btn delete-btn" onclick="window.deleteNote('${n.id}')">🗑️ حذف</button>
+            </div></div>`;
+    }).join('');
+}
+
+document.getElementById('saveBtn').onclick=async()=>{
+    const t=document.getElementById('noteInput').value.trim();
+    if(!t)return document.getElementById('status').innerText='⚠️ اكتب ملاحظة!';
+    document.getElementById('status').innerText='⏳ جاري الحفظ...';
+    if(editingId){
+        await setDoc(doc(db,"notes",editingId),{text:t,timestamp:Date.now()},{merge:true});
+        editingId=null;document.getElementById('saveBtn').innerText='💾 حفظ على السحابة';
+    }else{
+        await setDoc(doc(collection(db,"notes")),{text:t,timestamp:Date.now(),isPinned:false,order:Date.now()});
     }
+    document.getElementById('noteInput').value='';document.getElementById('status').innerText='✅ تم الحفظ!';
+    setTimeout(()=>document.getElementById('status').innerText='',2000);loadNotes();
+};
 
-    function renderNotes() {
-        const container = document.getElementById('notesContainer');
-        const term = document.getElementById('searchInput').value.toLowerCase();
-        const filtered = notes.filter(n => (n.text || '').toLowerCase().includes(term));
-
-        if (filtered.length === 0) {
-            container.innerHTML = '<p>لا توجد ملاحظات.</p>';
-            return;
-        }
-
-        container.innerHTML = filtered.map(n => `
-            <div class="note ${n.isPinned ? 'pinned' : ''}">
-                <p>${n.text || ''}</p>
-                <div class="actions">
-                    <button onclick="editNote('${n.id}')">✏️ تعديل</button>
-                    <button onclick="pinNote('${n.id}', ${n.isPinned || false})">${n.isPinned ? '📌 إلغاء' : '📌 تثبيت'}</button>
-                    <button onclick="moveNote('${n.id}', 1)">⬆️ رفع</button>
-                    <button onclick="moveNote('${n.id}', -1)">⬇️ إنزال</button>
-                    <button onclick="deleteNote('${n.id}')" style="color:red;">🗑️ حذف</button>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    window.saveNote = async () => {
-        const text = document.getElementById('noteInput').value.trim();
-        if (!text) return alert('اكتب ملاحظة!');
-        await setDoc(doc(collection(db, "notes")), {
-            text: text, timestamp: Date.now(), isPinned: false, order: Date.now()
-        });
-        document.getElementById('noteInput').value = '';
-        await loadNotes();
-    };
-
-    window.deleteNote = async (id) => {
-        if (confirm('حذف الملاحظة؟')) {
-            await deleteDoc(doc(db, "notes", id));
-            await loadNotes();
-        }
-    };
-
-    window.pinNote = async (id, currentPin) => {
-        await setDoc(doc(db, "notes", id), { isPinned: !currentPin }, { merge: true });
-        await loadNotes();
-    };
-
-    window.editNote = (id) => {
-        const note = notes.find(n => n.id === id);
-        document.getElementById('noteInput').value = note.text;
-        const saveBtn = document.querySelector('button[onclick="saveNote()"]');
-        saveBtn.innerText = '✏️ تحديث';
-        saveBtn.onclick = async () => {
-            const newText = document.getElementById('noteInput').value.trim();
-            await setDoc(doc(db, "notes", id), { text: newText }, { merge: true });
-            saveBtn.innerText = '💾 حفظ';
-            saveBtn.onclick = window.saveNote;
-            document.getElementById('noteInput').value = '';
-            await loadNotes();
-        };
-    };
-
-    window.moveNote = async (id, dir) => {
-        const idx = notes.findIndex(n => n.id === id);
-        if (dir === 1 && idx > 0) {
-            await setDoc(doc(db, "notes", id), { order: (notes[idx - 1].order || 0) + 1 }, { merge: true });
-        } else if (dir === -1 && idx < notes.length - 1) {
-            await setDoc(doc(db, "notes", id), { order: (notes[idx + 1].order || 0) - 1 }, { merge: true });
-        }
-        await loadNotes();
-    };
-
-    window.toggleList = () => {
-        document.getElementById('listArea').classList.toggle('hidden');
-    };
-
-    window.goFirst = () => {
-        const first = document.querySelector('.note');
-        if (first) first.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    };
-
-    window.goLast = () => {
-        const all = document.querySelectorAll('.note');
-        if (all.length) all[all.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
-    };
-
-    window.exportData = () => {
-        const blob = new Blob([JSON.stringify(notes, null, 2)], { type: 'application/json' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'notes-backup.json';
-        a.click();
-    };
-
-    window.importData = (event) => {
-        const file = event.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = async (e) => {
-            try {
-                const data = JSON.parse(e.target.result);
-                const list = Array.isArray(data) ? data : (data.notes || []);
-                for (let n of list) {
-                    await setDoc(doc(collection(db, "notes")), {
-                        text: n.text || '',
-                        timestamp: n.timestamp || Date.now(),
-                        isPinned: n.isPinned || false,
-                        order: n.order || Date.now()
-                    });
-                }
-                await loadNotes();
-                alert('تم الاستيراد!');
-            } catch (err) {
-                alert('خطأ في الملف');
-            }
-        };
-        reader.readAsText(file);
-    };
-
+window.deleteNote=async(id)=>{if(confirm('حذف؟')){await deleteDoc(doc(db,"notes",id));loadNotes();}};
+window.pinNote=async(id,p)=>{await setDoc(doc(db,"notes",id),{isPinned:!p,order:Date.now()},{merge:true});loadNotes();};
+window.editNote=(id)=>{const n=notes.find(x=>x.id===id);document.getElementById('noteInput').value=n.text;editingId=id;document.getElementById('saveBtn').innerText='✏️ تحديث الملاحظة';document.getElementById('noteInput').scrollIntoView({behavior:'smooth',block:'center'});};
+window.moveNote=async(id,dir)=>{
+    const i=notes.findIndex(x=>x.id===id);
+    if(dir===1&&i>0)await setDoc(doc(db,"notes",id),{order:(notes[i-1].order||0)+1},{merge:true});
+    else if(dir===-1&&i<notes.length-1)await setDoc(doc(db,"notes",id),{order:(notes[i+1].order||0)-1},{merge:true});
     loadNotes();
+};
+
+document.getElementById('exportBtn').onclick=()=>{
+    const b=new Blob([JSON.stringify(notes,null,2)],{type:'application/json'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='notes-backup.json';a.click();
+};
+document.getElementById('importBtn').onclick=()=>document.getElementById('importInput').click();
+document.getElementById('importInput').onchange=async(e)=>{
+    const f=e.target.files[0];if(!f)return;
+    const r=new FileReader();
+    r.onload=async(ev)=>{
+        try{
+            const d=JSON.parse(ev.target.result);const l=Array.isArray(d)?d:(d.notes||[]);
+            for(let n of l){await setDoc(doc(collection(db,"notes")),{text:n.text||'',timestamp:n.timestamp||Date.now(),isPinned:n.isPinned||false,order:n.order||Date.now()});}
+            loadNotes();alert('تم الاستيراد!');
+        }catch(err){alert('خطأ في الملف');}
+    };r.readAsText(f);
+};
+
+loadNotes();
 </script>
 </body>
 </html>
