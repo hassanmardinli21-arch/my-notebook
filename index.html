@@ -18,9 +18,18 @@
     .notes-list { display: none; margin-top: 15px; border-top: 2px solid var(--border); padding-top: 15px; }
     .notes-list.visible { display: block; }
     .search-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid var(--border); border-radius: 6px; font-family: inherit; background: white; }
-    .note-card { background: var(--card); padding: 15px; margin-bottom: 15px; border-radius: 6px; border: 1px solid var(--border); }
+    
+    /* تصميم الفهرس */
+    .toc-container { background: #fffaf0; border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 8px; }
+    .toc-item { background: #e8dcc0; color: var(--primary); padding: 5px 10px; border-radius: 4px; font-size: 13px; cursor: pointer; text-decoration: none; border: 1px solid #c9a961; font-weight: bold; }
+    .toc-item:hover { background: var(--primary); color: white; }
+
+    .note-card { background: var(--card); padding: 15px; margin-bottom: 15px; border-radius: 6px; border: 1px solid var(--border); scroll-margin-top: 20px; }
     .note-card.pinned { border: 2px solid #d4af37; background: #fffdf5; }
-    .note-header { font-size: 12px; color: #666; margin-bottom: 8px; border-bottom: 1px dashed var(--border); padding-bottom: 5px; }
+    .note-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px dashed var(--border); padding-bottom: 8px; }
+    .note-title-input { font-size: 15px; font-weight: bold; color: var(--primary); border: none; background: transparent; width: 70%; outline: none; border-bottom: 1px solid transparent; }
+    .note-title-input:focus { border-bottom: 1px solid var(--primary); }
+    .note-number { font-size: 18px; font-weight: bold; color: #b08d57; background: #f0e6cc; padding: 2px 10px; border-radius: 50%; border: 2px solid var(--border); }
     .note-text { margin-bottom: 12px; white-space: pre-wrap; line-height: 1.6; }
     .btn-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 5px; }
     .action-btn { padding: 8px; font-size: 12px; border-radius: 4px; border: 1px solid var(--border); background: white; cursor: pointer; font-weight: bold; }
@@ -47,6 +56,10 @@
 
     <div class="notes-list" id="notesList">
         <div class="search-box"><input type="text" id="searchInput" placeholder="🔍 ابحث في الملاحظات..."></div>
+        
+        <!-- الفهرس التلقائي سيظهر هنا -->
+        <div id="tocContainer" class="toc-container"></div>
+        
         <div id="notesContainer">⏳ جاري التحميل...</div>
     </div>
 </div>
@@ -73,6 +86,7 @@
     
     window.scrollFirst = () => { const f = document.querySelector('.note-card'); if(f) f.scrollIntoView({behavior:'smooth', block:'center'}); };
     window.scrollLast = () => { const a = document.querySelectorAll('.note-card'); if(a.length) a[a.length-1].scrollIntoView({behavior:'smooth', block:'center'}); };
+    window.scrollToNote = (id) => { const el = document.getElementById('note_' + id); if(el) el.scrollIntoView({behavior:'smooth', block:'center'}); };
 
     async function load() {
         const s = await getDocs(collection(db, "notes"));
@@ -89,18 +103,38 @@
 
     function render() {
         let f = notes.filter(n => (n.text || '').toLowerCase().includes(search));
-        $('notesContainer').innerHTML = f.map(n => `
-        <div class="note-card ${n.isPinned ? 'pinned' : ''}">
-            <div class="note-header">${n.isPinned ? '📌' : ''} 📅 ${new Date(n.timestamp || 0).toLocaleString('ar-EG')}</div>
-            <div class="note-text">${n.text || ''}</div>
-            <div class="btn-group">
-                <button class="action-btn" onclick="window.edit('${n.id}')">✏️ تعديل</button>
-                <button class="action-btn" onclick="window.pin('${n.id}', ${n.isPinned || false})">${n.isPinned ? '📌 إلغاء' : '📌 تثبيت'}</button>
-                <button class="action-btn" onclick="window.move('${n.id}', 1)">⬆️ رفع</button>
-                <button class="action-btn" onclick="window.move('${n.id}', -1)">⬇️ إنزال</button>
-                <button class="action-btn delete-btn" onclick="window.del('${n.id}')">🗑️ حذف</button>
-            </div>
-        </div>`).join('') || '<p style="text-align:center">لا توجد ملاحظات</p>';
+        
+        // بناء الفهرس التلقائي
+        let tocHtml = '';
+        let notesHtml = '';
+
+        f.forEach((n, index) => {
+            let num = index + 1;
+            let title = n.title || `ملاحظة ${num}`;
+            
+            // زر في الفهرس
+            tocHtml += `<div class="toc-item" onclick="window.scrollToNote('${n.id}')">${num}. ${title}</div>`;
+
+            // بطاقة الملاحظة
+            notesHtml += `
+            <div class="note-card ${n.isPinned ? 'pinned' : ''}" id="note_${n.id}">
+                <div class="note-header">
+                    <input type="text" class="note-title-input" value="${title}" onchange="window.updateTitle('${n.id}', this.value)" placeholder="اسم الملاحظة...">
+                    <span class="note-number">${num}</span>
+                </div>
+                <div class="note-text">${n.text || ''}</div>
+                <div class="btn-group">
+                    <button class="action-btn" onclick="window.edit('${n.id}')">✏️ تعديل</button>
+                    <button class="action-btn" onclick="window.pin('${n.id}', ${n.isPinned || false})">${n.isPinned ? '📌 إلغاء' : '📌 تثبيت'}</button>
+                    <button class="action-btn" onclick="window.move('${n.id}', 1)">⬆️ رفع</button>
+                    <button class="action-btn" onclick="window.move('${n.id}', -1)">⬇️ إنزال</button>
+                    <button class="action-btn delete-btn" onclick="window.del('${n.id}')">🗑️ حذف</button>
+                </div>
+            </div>`;
+        });
+
+        $('tocContainer').innerHTML = tocHtml || '<p style="text-align:center;width:100%;color:#888;">لا توجد ملاحظات</p>';
+        $('notesContainer').innerHTML = notesHtml || '<p style="text-align:center">لا توجد ملاحظات</p>';
     }
 
     $('saveBtn').onclick = async () => {
@@ -110,16 +144,21 @@
             await setDoc(doc(db, "notes", editId), {text: t, timestamp: Date.now()}, {merge: true});
             editId = null; $('saveBtn').innerText = '💾 حفظ على السحابة';
         } else {
-            await setDoc(doc(collection(db, "notes")), {text: t, timestamp: Date.now(), isPinned: false, order: Date.now()});
+            await setDoc(doc(collection(db, "notes")), {text: t, title: '', timestamp: Date.now(), isPinned: false, order: Date.now()});
         }
         $('noteInput').value = ''; load();
+    };
+
+    // تحديث اسم الملاحظة
+    window.updateTitle = async (id, newTitle) => {
+        await setDoc(doc(db, "notes", id), { title: newTitle }, { merge: true });
+        load();
     };
 
     window.del = async (id) => { if(confirm('حذف؟')) { await deleteDoc(doc(db, "notes", id)); load(); } };
     window.pin = async (id, p) => { await setDoc(doc(db, "notes", id), {isPinned: !p, order: Date.now()}, {merge: true}); load(); };
     window.edit = (id) => { const n = notes.find(x => x.id === id); $('noteInput').value = n.text; editId = id; $('saveBtn').innerText = '✏️ تحديث'; $('noteInput').scrollIntoView({behavior:'smooth'}); };
 
-    // ✅ هنا التعديل الذي طلبته: زر الرفع يرفعها لأعلى القائمة، وزر الإنزال ينزلها لأسفل القائمة
     window.move = async (id, dir) => {
         if (dir === 1) {
             const maxOrder = notes.reduce((max, n) => Math.max(max, n.order || 0), Date.now());
@@ -144,7 +183,7 @@
             try {
                 const d = JSON.parse(ev.target.result);
                 for(let n of (Array.isArray(d) ? d : d.notes || [])) {
-                    await setDoc(doc(collection(db, "notes")), {text: n.text || '', timestamp: n.timestamp || Date.now(), isPinned: n.isPinned || false, order: n.order || Date.now()});
+                    await setDoc(doc(collection(db, "notes")), {text: n.text || '', title: n.title || '', timestamp: n.timestamp || Date.now(), isPinned: n.isPinned || false, order: n.order || Date.now()});
                 }
                 load();
             } catch(err) { alert('خطأ في الملف'); }
