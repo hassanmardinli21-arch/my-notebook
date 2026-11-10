@@ -150,6 +150,94 @@ document.getElementById('importInput').onchange=async(e)=>{
         }catch(err){alert('خطأ في الملف');}
     };r.readAsText(f);
 };
+    <!-- قسم المسبحة الإلكترونية -->
+<div class="tasbeeh-card">
+    <h3>المسبحة الإلكترونية</h3>
+    <div class="tasbeeh-counter" id="tasbeehDisplay">0</div>
+    <div class="tasbeeh-actions">
+        <button id="countBtn" class="tasbeeh-btn increment-btn">+1 سبّح</button>
+        <button id="resetBtn" class="tasbeeh-btn reset-btn">تصفير العداد</button>
+    </div>
+</div>
+
+<style>
+.tasbeeh-card {
+    background: var(--paper-card, #faf0d7);
+    border: 2px solid var(--paper-border, #c9a961);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 800px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+.tasbeeh-card h3 {
+    margin-bottom: 15px;
+    color: var(--ink-dark, #3e2c1c);
+    border-bottom: 1px dashed var(--paper-border, #c9a961);
+    padding-bottom: 8px;
+}
+.tasbeeh-counter {
+    font-size: 48px;
+    font-weight: bold;
+    color: var(--primary, #8b5a2b);
+    margin: 15px 0;
+}
+.tasbeeh-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+.tasbeeh-btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-family: inherit;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s;
+}
+.increment-btn {
+    background: var(--primary, #8b5a2b);
+    color: #fff;
+    flex: 2;
+}
+.increment-btn:active {
+    transform: scale(0.98);
+}
+.reset-btn {
+    background: transparent;
+    color: var(--danger, #a83232);
+    border: 1px solid var(--danger, #a83232);
+    flex: 1;
+}
+</style>
+
+<script>
+(function() {
+    const display = document.getElementById('tasbeehDisplay');
+    const countBtn = document.getElementById('countBtn');
+    const resetBtn = document.getElementById('resetBtn');
+
+    let count = parseInt(localStorage.getItem('tasbeehCount')) || 0;
+    display.textContent = count;
+
+    countBtn.addEventListener('click', () => {
+        count++;
+        display.textContent = count;
+        localStorage.setItem('tasbeehCount', count);
+    });
+
+    resetBtn.addEventListener('click', () => {
+        if (confirm('هل تريد تصفير العداد؟')) {
+            count = 0;
+            display.textContent = count;
+            localStorage.setItem('tasbeehCount', 0);
+        }
+    });
+})();
+</script>
 
 loadNotes();
 </script>
