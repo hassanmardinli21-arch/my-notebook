@@ -19,8 +19,8 @@
     .notes-list.visible { display: block; }
     .search-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid var(--border); border-radius: 6px; font-family: inherit; background: white; }
     
-    /* تصميم الفهرس */
-    .toc-container { background: #fffaf0; border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 8px; }
+    /* تصميم الفهرس - تم إضافة شريط التمرير max-height: 150px و overflow-y: auto */
+    .toc-container { background: #fffaf0; border: 1px solid var(--border); border-radius: 6px; padding: 10px; margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 8px; max-height: 150px; overflow-y: auto; }
     .toc-item { background: #e8dcc0; color: var(--primary); padding: 5px 10px; border-radius: 4px; font-size: 13px; cursor: pointer; text-decoration: none; border: 1px solid #c9a961; font-weight: bold; }
     .toc-item:hover { background: var(--primary); color: white; }
 
@@ -57,7 +57,7 @@
     <div class="notes-list" id="notesList">
         <div class="search-box"><input type="text" id="searchInput" placeholder="🔍 ابحث في الملاحظات..."></div>
         
-        <!-- الفهرس التلقائي سيظهر هنا -->
+        <!-- الفهرس التلقائي -->
         <div id="tocContainer" class="toc-container"></div>
         
         <div id="notesContainer">⏳ جاري التحميل...</div>
@@ -104,7 +104,6 @@
     function render() {
         let f = notes.filter(n => (n.text || '').toLowerCase().includes(search));
         
-        // بناء الفهرس التلقائي
         let tocHtml = '';
         let notesHtml = '';
 
@@ -112,10 +111,8 @@
             let num = index + 1;
             let title = n.title || `ملاحظة ${num}`;
             
-            // زر في الفهرس
             tocHtml += `<div class="toc-item" onclick="window.scrollToNote('${n.id}')">${num}. ${title}</div>`;
 
-            // بطاقة الملاحظة
             notesHtml += `
             <div class="note-card ${n.isPinned ? 'pinned' : ''}" id="note_${n.id}">
                 <div class="note-header">
@@ -149,7 +146,6 @@
         $('noteInput').value = ''; load();
     };
 
-    // تحديث اسم الملاحظة
     window.updateTitle = async (id, newTitle) => {
         await setDoc(doc(db, "notes", id), { title: newTitle }, { merge: true });
         load();
