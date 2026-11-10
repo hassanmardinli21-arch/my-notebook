@@ -114,17 +114,16 @@
             font-family: 'Georgia', 'Amiri', serif; transition: all var(--transition-speed) ease;
         }
         .toggle-index-btn:hover { background: linear-gradient(145deg, #6f563a, #5c4530); transform: translateY(-2px); }
+        
         .notes-list { margin-top: 10px; border-top: 2px double var(--paper-border); padding-top: 15px; display: none; }
         .notes-list.visible { display: block; }
-        
+
         /* شريط البحث */
         .search-box {
             margin-bottom: 15px;
-            display: flex;
-            gap: 10px;
         }
         .search-box input {
-            flex: 1;
+            width: 100%;
             padding: 12px 15px;
             border: 2px solid var(--paper-border);
             border-radius: 6px;
@@ -281,7 +280,7 @@
         <button class="toggle-index-btn" id="toggleIndexBtn">📂 إظهار الفهرس</button>
 
         <div class="notes-list" id="notesList">
-            <!-- شريط البحث الجديد -->
+            <!-- شريط البحث -->
             <div class="search-box">
                 <input type="text" id="searchInput" placeholder="🔍 ابحث في الملاحظات...">
             </div>
@@ -336,7 +335,7 @@
         const exportBtn = document.getElementById('exportBtn');
         const importBtn = document.getElementById('importBtn');
         const importInput = document.getElementById('importInput');
-        const searchInput = document.getElementById('searchInput'); // حقل البحث
+        const searchInput = document.getElementById('searchInput');
         
         const goToFirstBtn = document.getElementById('goToFirstBtn');
         const goToLastBtn = document.getElementById('goToLastBtn');
@@ -347,26 +346,27 @@
         let isVisible = false;
         
         let currentNotes = []; 
-        let searchTerm = ''; // متغير لتخزين نص البحث
+        let searchTerm = '';
 
         document.getElementById('scrollTopBtn').addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
         document.getElementById('scrollBottomBtn').addEventListener('click', () => window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' }));
 
         goToFirstBtn.addEventListener('click', () => {
-            if (notesContainer.children.length > 0 && notesContainer.children[0].classList.contains('note-card')) {
-                notesContainer.children[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const firstCard = notesContainer.querySelector('.note-card');
+            if (firstCard) {
+                firstCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
             } else {
-                showStatus('⚠️ لا توجد ملاحظات مطابقة!', 'err');
+                showStatus('⚠️ لا توجد ملاحظات لعرضها!', 'err');
                 setTimeout(() => showStatus(''), 2000);
             }
         });
 
         goToLastBtn.addEventListener('click', () => {
-            const lastElement = notesContainer.lastElementChild;
-            if (lastElement && lastElement.classList.contains('note-card')) {
-                lastElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const cards = notesContainer.querySelectorAll('.note-card');
+            if (cards.length > 0) {
+                cards[cards.length - 1].scrollIntoView({ behavior: 'smooth', block: 'center' });
             } else {
-                showStatus('⚠️ لا توجد ملاحظات مطابقة!', 'err');
+                showStatus('⚠️ لا توجد ملاحظات لعرضها!', 'err');
                 setTimeout(() => showStatus(''), 2000);
             }
         });
@@ -377,10 +377,9 @@
             toggleBtn.textContent = isVisible ? '📂 إخفاء الفهرس' : '📂 إظهار الفهرس';
         });
 
-        // حدث البحث الفوري
         searchInput.addEventListener('input', (e) => {
             searchTerm = e.target.value.toLowerCase().trim();
-            renderNotesList(); // إعادة رسم الملاحظات المفلترة
+            renderNotesList();
         });
 
         function setButtonColor(color) {
@@ -542,7 +541,7 @@
                     currentNotes.push({ id: d.id, ...d.data() });
                 });
 
-                // الترتيب: المثبتة أولاً، ثم حسب الترتيب اليدوي، ثم الأحدث
+                // الترتيب: المثبتة أولاً، ثم الأحدث (بناءً على order)
                 currentNotes.sort((a, b) => {
                     const pinA = a.isPinned ? 1 : 0;
                     const pinB = b.isPinned ? 1 : 0;
@@ -550,14 +549,10 @@
 
                     const orderA = a.order || 0;
                     const orderB = b.order || 0;
-                    if (orderA !== orderB) return orderA - orderB;
-
-                    const timeA = a.timestamp?.toMillis ? a.timestamp.toMillis() : new Date(a.timestamp || 0).getTime();
-                    const timeB = b.timestamp?.toMillis ? b.timestamp.toMillis() : new Date(b.timestamp || 0).getTime();
-                    return timeB - timeA; // الأحدث أولاً
+                    return orderB - orderA; // الأحدث (الرقم الأكبر) أولاً
                 });
 
-                renderNotesList(); // استدعاء دالة الرسم
+                renderNotesList();
                 
             } catch (error) {
                 notesContainer.innerHTML = `<p style="color:#dc2626;text-align:center;">خطأ في تحميل الملاحظات: ${error.message}</p>`;
@@ -565,11 +560,9 @@
             }
         }
 
-        // دالة رسم الملاحظات (تأخذ في الاعتبار فلترة البحث)
         function renderNotesList() {
             notesContainer.innerHTML = '';
             
-            // فلترة الملاحظات
             let filteredNotes = currentNotes;
             if (searchTerm) {
                 filteredNotes = currentNotes.filter(n => 
@@ -587,7 +580,6 @@
                 const docId = note.id;
                 const isPinned = data.isPinned || false;
 
-                // للتحقق مما إذا كانت الملاحظة الأولى أو الأخيرة في القائمة المفلترة
                 const isFirst = index === 0;
                 const isLast = index === filteredNotes.length - 1;
 
@@ -660,7 +652,7 @@
                 pinBtn.className = `action-btn pin-btn ${isPinned ? 'active' : ''}`;
                 pinBtn.innerHTML = isPinned ? '📌 مثبتة' : '📌 تثبيت';
                 pinBtn.addEventListener('click', async () => {
-                    const newOrder = isPinned ? 0 : (Date.now() * -1); 
+                    const newOrder = isPinned ? 0 : (Date.now()); // لضمان أنها تظهر في الأعلى
                     await updateNoteOrder(docId, { isPinned: !isPinned, order: newOrder });
                 });
 
@@ -668,14 +660,14 @@
                 moveUpBtn.className = 'action-btn move-btn';
                 moveUpBtn.innerHTML = '⬆️ رفع';
                 moveUpBtn.title = 'تقديم الملاحظة للأعلى';
-                if (isFirst && !searchTerm) moveUpBtn.disabled = true; // تعطيل إذا كانت الأولى في القائمة الأصلية
+                if (isFirst && !searchTerm) moveUpBtn.disabled = true;
                 moveUpBtn.addEventListener('click', async () => {
-                    // البحث عن الملاحظة السابقة في المصفوفة الأصلية
                     const originalIndex = currentNotes.findIndex(n => n.id === docId);
                     if (originalIndex > 0) {
                         const prevNote = currentNotes[originalIndex - 1];
+                        // تبادل القيم لرفع الملاحظة
                         const prevOrder = prevNote.order || 0;
-                        await updateNoteOrder(docId, { order: prevOrder - 1, isPinned: prevNote.isPinned || false });
+                        await updateNoteOrder(docId, { order: prevOrder + 1, isPinned: prevNote.isPinned || false });
                     }
                 });
 
@@ -683,13 +675,13 @@
                 moveDownBtn.className = 'action-btn move-btn';
                 moveDownBtn.innerHTML = '⬇️ إنزال';
                 moveDownBtn.title = 'تأخير الملاحظة للأسفل';
-                if (isLast && !searchTerm) moveDownBtn.disabled = true; // تعطيل إذا كانت الأخيرة
+                if (isLast && !searchTerm) moveDownBtn.disabled = true;
                 moveDownBtn.addEventListener('click', async () => {
                     const originalIndex = currentNotes.findIndex(n => n.id === docId);
                     if (originalIndex < currentNotes.length - 1) {
                         const nextNote = currentNotes[originalIndex + 1];
                         const nextOrder = nextNote.order || 0;
-                        await updateNoteOrder(docId, { order: nextOrder + 1, isPinned: nextNote.isPinned || false });
+                        await updateNoteOrder(docId, { order: nextOrder - 1, isPinned: nextNote.isPinned || false });
                     }
                 });
 
@@ -790,14 +782,13 @@
                     }
                     showStatus('⏳ جاري حفظ الملاحظة...', 'info');
                     
-                    // 🔥 هنا التعديل: حفظ الملاحظة الجديدة في الأعلى 🔥
-                    // نستخدم قيمة سالبة للوقت (أو القيمة الحالية) لضمان أنها تتصدر القائمة
+                    // الملاحظة الجديدة تأخذ Date.now() وهو الأكبر، فستظهر أولاً
                     await setDoc(doc(collection(db, "notes")), {
                         text: noteText, 
                         attachments: selectedFiles, 
                         timestamp: new Date(),
                         isPinned: false,
-                        order: Date.now() // الملاحظات الجديدة تأخذ تاريخاً حديثاً، وبالتالي تظهر في الأعلى (قبل القديمة)
+                        order: Date.now() 
                     });
                     
                     showStatus('✅ تم الحفظ بنجاح!', 'ok');
@@ -931,7 +922,6 @@
                         const isPinned = n.isPinned || false;
                         const order = n.order || Date.now() + i;
 
-                        // تنظيف أي undefined قبل الحفظ
                         const cleanNote = {
                             text: text,
                             attachments: attachments,
