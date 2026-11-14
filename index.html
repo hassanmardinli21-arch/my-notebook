@@ -40,7 +40,7 @@
         box-shadow: 0 3px 6px rgba(0,0,0,0.3) !important; text-shadow: 1px 1px 3px rgba(0,0,0,0.6) !important; 
     }
 
-    .note-text { margin-bottom: 12px; white-space: pre-wrap; line-height: 1.6; }
+    .note-text { margin-bottom: 12px; white-space: pre-wrap; line-height: 1.6; word-break: break-all; }
     .btn-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 5px; }
     .action-btn { padding: 8px; font-size: 12px; border-radius: 4px; border: 1px solid var(--border); background: white; cursor: pointer; font-weight: bold; }
     .action-btn:hover { background: #eee; }
@@ -218,9 +218,9 @@
         load();
     };
 
-    /* 🔥 دالة إزالة العوائق (المحدثة لحذف المرفقات التالفة) 🔥 */
+    /* 🔥 دالة إزالة العوائق (القاطعة) 🔥 */
     $('cleanBtn').onclick = async () => {
-        if(!confirm("سيتم البحث عن أي ملاحظة لا تحتوي على نص حقيقي أو تالفة وحذفها نهائياً من السحابة. هل أنت متأكد؟")) return;
+        if(!confirm("سيتم البحث عن أي ملاحظة فارغة، أو تالفة، أو تحتوي على رابط/كود طويل وحذفها نهائياً. هل أنت متأكد؟")) return;
         
         $('cleanBtn').innerText = "⏳ جاري البحث والحذف...";
         $('cleanBtn').disabled = true;
@@ -230,22 +230,24 @@
             let count = 0;
             for (const d of s.docs) {
                 const data = d.data();
+                const txt = data.text || "";
                 
-                // إذا لم يكن هناك نص، أو النص فارغ، أو لا يوجد تاريخ
-                const hasText = data.text && data.text.trim().length > 0;
-                const hasTimestamp = data.timestamp && data.timestamp > 0;
+                const isEmpty = !txt.trim();
+                const isTooLong = txt.length > 500;
+                const isNoSpaces = txt.trim().length > 0 && !txt.includes(" ");
+                const hasNoDate = !data.timestamp;
                 
-                if (!hasText || !hasTimestamp) {
+                if (isEmpty || isTooLong || isNoSpaces || hasNoDate) {
                     await deleteDoc(doc(db, "notes", d.id));
                     count++;
                 }
             }
             
             if (count > 0) {
-                alert(`✅ تم حذف ${count} ملاحظة تالفة أو فارغة بنجاح.`);
-                load(); // إعادة تحميل القائمة
+                alert(`✅ تم حذف ${count} ملاحظة (رابط/كود/تالفة) بنجاح.`);
+                load();
             } else {
-                alert("لم يتم العثور على أي ملاحظات فارغة أو تالفة.");
+                alert("لم يتم العثور على أي ملاحظات مخالفة.");
             }
         } catch(e) {
             alert("حدث خطأ: " + e.message);
