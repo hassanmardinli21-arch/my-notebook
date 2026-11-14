@@ -105,16 +105,32 @@
     window.scrollToNote = (id) => { const el = document.getElementById('note_' + id); if(el) el.scrollIntoView({behavior:'smooth', block:'center'}); };
 
     async function load() {
-        const s = await getDocs(collection(db, "notes"));
-        notes = [];
-        s.forEach(d => notes.push({id: d.id, ...d.data()}));
-        
-        notes.sort((a, b) => {
-            if (a.isPinned && !b.isPinned) return -1;
-            if (!a.isPinned && b.isPinned) return 1;
-            return (b.order || 0) - (a.order || 0);
-        });
-        render();
+        try {
+            const s = await getDocs(collection(db, "notes"));
+            notes = [];
+            s.forEach(d => {
+                const data = d.data();
+                // حماية من البيانات التالفة
+                notes.push({
+                    id: d.id,
+                    text: data.text || '', // نص فارغ افتراضي
+                    title: data.title || '',
+                    timestamp: data.timestamp || 0,
+                    isPinned: data.isPinned === true,
+                    order: data.order || 0
+                });
+            });
+            
+            notes.sort((a, b) => {
+                if (a.isPinned && !b.isPinned) return -1;
+                if (!a.isPinned && b.isPinned) return 1;
+                return (b.order || 0) - (a.order || 0);
+            });
+            render();
+        } catch (error) {
+            console.error("خطأ في تحميل الملاحظات:", error);
+            $('notesContainer').innerHTML = '<p style="color:red;text-align:center;">حدث خطأ في تحميل البيانات. يرجى تحديث الصفحة.</p>';
+        }
     }
 
     function render() {
@@ -135,7 +151,7 @@
                     <input type="text" class="note-title-input" value="${title}" onchange="window.updateTitle('${n.id}', this.value)" placeholder="اسم الملاحظة...">
                     <span class="gold-number">${num}</span>
                 </div>
-                <div class="note-text">${n.text || ''}</div>
+                <div class="note-text">${n.text || '⚠️ (ملاحظة تالفة أو بدون نص)'}</div>
                 <div class="btn-group">
                     <button class="action-btn" onclick="window.edit('${n.id}')">✏️ تعديل</button>
                     <button class="action-btn" onclick="window.pin('${n.id}', ${n.isPinned || false})">${n.isPinned ? '📌 إلغاء' : '📌 تثبيت'}</button>
@@ -153,13 +169,17 @@
     $('saveBtn').onclick = async () => {
         const t = $('noteInput').value.trim();
         if(!t) return;
-        if(editId) {
-            await setDoc(doc(db, "notes", editId), {text: t, timestamp: Date.now()}, {merge: true});
-            editId = null; $('saveBtn').innerText = '💾 حفظ على السحابة';
-        } else {
-            await setDoc(doc(collection(db, "notes")), {text: t, title: '', timestamp: Date.now(), isPinned: false, order: Date.now()});
+        try {
+            if(editId) {
+                await setDoc(doc(db, "notes", editId), {text: t, timestamp: Date.now()}, {merge: true});
+                editId = null; $('saveBtn').innerText = '💾 حفظ على السحابة';
+            } else {
+                await setDoc(doc(collection(db, "notes")), {text: t, title: '', timestamp: Date.now(), isPinned: false, order: Date.now()});
+            }
+            $('noteInput').value = ''; load();
+        } catch (e) {
+            alert("حدث خطأ أثناء الحفظ: " + e.message);
         }
-        $('noteInput').value = ''; load();
     };
 
     window.updateTitle = async (id, newTitle) => {
@@ -167,9 +187,28 @@
         load();
     };
 
-    window.del = async (id) => { if(confirm('حذف؟')) { await deleteDoc(doc(db, "notes", id)); load(); } };
+    window.del = async (id) => { 
+        if(confirm('هل أنت متأكد من حذف هذه الملاحظة نهائياً؟')) { 
+            try {
+                await deleteDoc(doc(db, "notes", id)); 
+                load(); 
+            } catch(e) {
+                alert("حدث خطأ أثناء الحذف: " + e.message);
+            }
+        } 
+    };
+
     window.pin = async (id, p) => { await setDoc(doc(db, "notes", id), {isPinned: !p, order: Date.now()}, {merge: true}); load(); };
-    window.edit = (id) => { const n = notes.find(x => x.id === id); $('noteInput').value = n.text; editId = id; $('saveBtn').innerText = '✏️ تحديث'; $('noteInput').scrollIntoView({behavior:'smooth'}); };
+    
+    window.edit = (id) => { 
+        const n = notes.find(x => x.id === id); 
+        if(n) {
+            $('noteInput').value = n.text; 
+            editId = id; 
+            $('saveBtn').innerText = '✏️ تحديث'; 
+            $('noteInput').scrollIntoView({behavior:'smooth'}); 
+        }
+    };
 
     window.move = async (id, dir) => {
         if (dir === 1) {
@@ -195,7 +234,13 @@
             try {
                 const d = JSON.parse(ev.target.result);
                 for(let n of (Array.isArray(d) ? d : d.notes || [])) {
-                    await setDoc(doc(collection(db, "notes")), {text: n.text || '', title: n.title || '', timestamp: n.timestamp || Date.now(), isPinned: n.isPinned || false, order: n.order || Date.now()});
+                    await setDoc(doc(collection(db, "notes")), {
+                        text: n.text || '', 
+                        title: n.title || '', 
+                        timestamp: n.timestamp || Date.now(), 
+                        isPinned: n.isPinned === true, 
+                        order: n.order || Date.now()
+                    });
                 }
                 load();
             } catch(err) { alert('خطأ في الملف'); }
