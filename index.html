@@ -41,17 +41,14 @@
     }
 
     .note-text { margin-bottom: 12px; white-space: pre-wrap; line-height: 1.6; word-break: break-all; }
-    .btn-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 5px; }
+    .btn-group { display: grid; grid-template-columns: repeat(auto-fit, minmax(75px, 1fr)); gap: 5px; }
     .action-btn { padding: 8px; font-size: 12px; border-radius: 4px; border: 1px solid var(--border); background: white; cursor: pointer; font-weight: bold; }
     .action-btn:hover { background: #eee; }
+    .copy-btn { background: #e0f2f1; color: #00695c; border-color: #00695c; }
+    .copy-btn:hover { background: #b2dfdb; }
     .delete-btn { color: red; background: #fce4e4; }
     .floating { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; background: #2a1e12; padding: 10px; border-radius: 30px; z-index: 999; border: 1px solid #c9a961; }
     .floating button { width: 40px; height: 40px; border-radius: 50%; border: none; font-size: 18px; cursor: pointer; background: #f4e4bc; }
-    
-    .clean-btn { 
-        width: 100%; padding: 10px; margin-bottom: 10px; background: #fce4e4; color: red; 
-        border: 1px dashed red; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit;
-    }
 </style>
 </head>
 <body>
@@ -70,8 +67,6 @@
     <button class="toggle-index-btn" id="toggleIndexBtn">📂 إظهار الفهرس</button>
 
     <div class="notes-list" id="notesList">
-        <button class="clean-btn" id="cleanBtn">🗑️ إزالة الملاحظات المعلقة/التالفة</button>
-        
         <div class="search-box"><input type="text" id="searchInput" placeholder="🔍 ابحث في الملاحظات..."></div>
         <div id="tocContainer"></div>
         <div id="notesContainer">⏳ جاري التحميل...</div>
@@ -154,6 +149,7 @@
                     <button class="action-btn" onclick="window.pin('${n.id}', ${n.isPinned || false})">${n.isPinned ? '📌 إلغاء' : '📌 تثبيت'}</button>
                     <button class="action-btn" onclick="window.move('${n.id}', 1)">⬆️ رفع</button>
                     <button class="action-btn" onclick="window.move('${n.id}', -1)">⬇️ إنزال</button>
+                    <button class="action-btn copy-btn" onclick="window.copyText('${n.id}')">📋 نسخ</button>
                     <button class="action-btn delete-btn" onclick="window.del('${n.id}')">🗑️ حذف</button>
                 </div>
             </div>`;
@@ -162,6 +158,18 @@
         $('tocContainer').innerHTML = tocHtml || '<p style="text-align:center;width:100%;color:#888;">لا توجد ملاحظات</p>';
         $('notesContainer').innerHTML = notesHtml || '<p style="text-align:center">لا توجد ملاحظات</p>';
     }
+
+    // دالة النسخ الجديدة
+    window.copyText = (id) => {
+        const n = notes.find(x => x.id === id);
+        if(n && n.text) {
+            navigator.clipboard.writeText(n.text).then(() => {
+                alert('✅ تم نسخ نص الملاحظة بنجاح!');
+            }).catch(err => {
+                alert('❌ تعذر النسخ تلقائياً. يرجى تحديد النص يدوياً.');
+            });
+        }
+    };
 
     $('saveBtn').onclick = async () => {
         const t = $('noteInput').value.trim();
@@ -216,45 +224,6 @@
             await setDoc(doc(db, "notes", id), { order: minOrder - 1000, isPinned: false }, { merge: true });
         }
         load();
-    };
-
-    /* 🔥 دالة إزالة العوائق (القاطعة) 🔥 */
-    $('cleanBtn').onclick = async () => {
-        if(!confirm("سيتم البحث عن أي ملاحظة فارغة، أو تالفة، أو تحتوي على رابط/كود طويل وحذفها نهائياً. هل أنت متأكد؟")) return;
-        
-        $('cleanBtn').innerText = "⏳ جاري البحث والحذف...";
-        $('cleanBtn').disabled = true;
-        
-        try {
-            const s = await getDocs(collection(db, "notes"));
-            let count = 0;
-            for (const d of s.docs) {
-                const data = d.data();
-                const txt = data.text || "";
-                
-                const isEmpty = !txt.trim();
-                const isTooLong = txt.length > 500;
-                const isNoSpaces = txt.trim().length > 0 && !txt.includes(" ");
-                const hasNoDate = !data.timestamp;
-                
-                if (isEmpty || isTooLong || isNoSpaces || hasNoDate) {
-                    await deleteDoc(doc(db, "notes", d.id));
-                    count++;
-                }
-            }
-            
-            if (count > 0) {
-                alert(`✅ تم حذف ${count} ملاحظة (رابط/كود/تالفة) بنجاح.`);
-                load();
-            } else {
-                alert("لم يتم العثور على أي ملاحظات مخالفة.");
-            }
-        } catch(e) {
-            alert("حدث خطأ: " + e.message);
-        } finally {
-            $('cleanBtn').innerText = "🗑️ إزالة الملاحظات المعلقة/التالفة";
-            $('cleanBtn').disabled = false;
-        }
     };
 
     $('exportBtn').onclick = () => {
