@@ -48,7 +48,6 @@
     .floating { position: fixed; bottom: 15px; left: 50%; transform: translateX(-50%); display: flex; gap: 10px; background: #2a1e12; padding: 10px; border-radius: 30px; z-index: 999; border: 1px solid #c9a961; }
     .floating button { width: 40px; height: 40px; border-radius: 50%; border: none; font-size: 18px; cursor: pointer; background: #f4e4bc; }
     
-    /* 🔥 زر إزالة العوائق */
     .clean-btn { 
         width: 100%; padding: 10px; margin-bottom: 10px; background: #fce4e4; color: red; 
         border: 1px dashed red; border-radius: 6px; cursor: pointer; font-weight: bold; font-family: inherit;
@@ -71,7 +70,6 @@
     <button class="toggle-index-btn" id="toggleIndexBtn">📂 إظهار الفهرس</button>
 
     <div class="notes-list" id="notesList">
-        <!-- زر التنظيف الجديد -->
         <button class="clean-btn" id="cleanBtn">🗑️ إزالة الملاحظات المعلقة/التالفة</button>
         
         <div class="search-box"><input type="text" id="searchInput" placeholder="🔍 ابحث في الملاحظات..."></div>
@@ -220,9 +218,9 @@
         load();
     };
 
-    /* 🔥 دالة إزالة العوائق 🔥 */
+    /* 🔥 دالة إزالة العوائق (المحدثة لحذف المرفقات التالفة) 🔥 */
     $('cleanBtn').onclick = async () => {
-        if(!confirm("سيتم البحث عن أي ملاحظة فارغة أو تالفة وحذفها نهائياً من السحابة. هل أنت متأكد؟")) return;
+        if(!confirm("سيتم البحث عن أي ملاحظة لا تحتوي على نص حقيقي أو تالفة وحذفها نهائياً من السحابة. هل أنت متأكد؟")) return;
         
         $('cleanBtn').innerText = "⏳ جاري البحث والحذف...";
         $('cleanBtn').disabled = true;
@@ -232,15 +230,19 @@
             let count = 0;
             for (const d of s.docs) {
                 const data = d.data();
-                // إذا كانت الملاحظة لا تحتوي على نص، أو النص فارغ، أو لا تحتوي على تاريخ (تالفة)
-                if (!data.text || data.text.trim() === '' || !data.timestamp) {
+                
+                // إذا لم يكن هناك نص، أو النص فارغ، أو لا يوجد تاريخ
+                const hasText = data.text && data.text.trim().length > 0;
+                const hasTimestamp = data.timestamp && data.timestamp > 0;
+                
+                if (!hasText || !hasTimestamp) {
                     await deleteDoc(doc(db, "notes", d.id));
                     count++;
                 }
             }
             
             if (count > 0) {
-                alert(`✅ تم حذف ${count} ملاحظة تالفة/فارغة بنجاح.`);
+                alert(`✅ تم حذف ${count} ملاحظة تالفة أو فارغة بنجاح.`);
                 load(); // إعادة تحميل القائمة
             } else {
                 alert("لم يتم العثور على أي ملاحظات فارغة أو تالفة.");
